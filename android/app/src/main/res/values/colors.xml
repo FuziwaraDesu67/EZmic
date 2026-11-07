@@ -1,0 +1,7 @@
+<resources>
+    <color name="primary">#89B4FA</color>
+    <color name="background">#181825</color>
+    <color name="surface">#1E1E2E</color>
+    <color name="accent">#A6E3A1</color>
+    <color name="error">#F38BA8</color>
+</resources>

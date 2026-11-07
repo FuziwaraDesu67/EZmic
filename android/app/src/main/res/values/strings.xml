@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">EZmic</string>
+    <string name="notification_title">Microphone Streaming</string>
+    <string name="notification_streaming">Streaming microphone to PC...</string>
+    <string name="notification_paused">Streaming paused</string>
+</resources>

@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Mic Companion",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/MicCompanion/bin/Debug/net8.0-windows/MicCompanion.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/MicCompanion",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
