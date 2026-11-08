@@ -95,9 +95,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="Transparent" CornerRadius="18">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="18">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#12FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -159,6 +164,7 @@
                     <Grid x:Name="DockSliderTrack" SizeChanged="DockSliderTrack_SizeChanged">
                         <!-- Sliding Liquid Glass Water Drop -->
                         <Border x:Name="LiquidIndicator"
+                                IsHitTestVisible="False"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Stretch"
                                 CornerRadius="18"

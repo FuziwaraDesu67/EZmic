@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using Color = System.Windows.Media.Color;
 using Rectangle = System.Windows.Shapes.Rectangle;
 using Canvas = System.Windows.Controls.Canvas;
+using Button = System.Windows.Controls.Button;
 using MicCompanion.Audio;
 using MicCompanion.Transports;
 using MicCompanion.UI;
@@ -24,6 +25,7 @@ public partial class MainWindow : Window
     private bool _isMuted = false;
     private bool _isRealExit = false;
     private string _selectedTransportMode = "WIFI";
+    public string SelectedTransportMode => _selectedTransportMode;
 
     private List<AudioDeviceItem> _deviceList = new();
 
