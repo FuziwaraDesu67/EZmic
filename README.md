@@ -28,9 +28,11 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 ## 🚀 60-Second Quick Start
 
 ### Step 1: Download the Files
-Go to the **[Releases](../../releases)** page (or grab from the `release/` folder):
-1. **Windows PC**: Download [`EZmic-v1.0-win64.exe`](release/EZmic-v1.0-win64.exe)
-2. **Android Phone**: Download [`EZmic-v1.0.apk`](release/EZmic-v1.0.apk)
+Grab the latest release from the **[Releases Page](https://github.com/aadarsh765/EZmic/releases/latest)**:
+- 💻 **Windows PC**: [**Download EZmic-v1.0-win64.exe**](https://github.com/aadarsh765/EZmic/releases/download/v1.0/EZmic-v1.0-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.0.apk**](https://github.com/aadarsh765/EZmic/releases/download/v1.0/EZmic-v1.0.apk) *(Native app, high quality)*
+
+*(All versions available on the **[Releases](https://github.com/aadarsh765/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
 1. Double-click `EZmic-v1.0-win64.exe` on your PC.
