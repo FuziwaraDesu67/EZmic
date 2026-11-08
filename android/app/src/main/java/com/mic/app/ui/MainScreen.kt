@@ -21,7 +21,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +69,8 @@ fun MainScreen(
     var enableNs by remember { mutableStateOf(true) }
     var enableAec by remember { mutableStateOf(true) }
     var gainSlider by remember { mutableFloatStateOf(100f) }
+    var showSwitchDialog by remember { mutableStateOf(false) }
+    var pendingMode by remember { mutableStateOf<TransportMode?>(null) }
 
     // Ballistic animated level
     val animatedLevel by animateFloatAsState(
@@ -157,7 +164,7 @@ fun MainScreen(
                 }
             }
 
-            // 2. Hardware Segmented Transport Selector
+            // 2. Connection Transport Selector (Liquid Glass Waterline Dock)
             Card(
                 colors = CardDefaults.cardColors(containerColor = PanelSurface),
                 shape = RoundedCornerShape(12.dp),
@@ -167,50 +174,45 @@ fun MainScreen(
                     .padding(bottom = 14.dp)
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Transport",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(bottom = 10.dp)
-                    )
-
-                    // Recessed Segmented Pill Bar
-                    Box(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ChassisBackground)
-                            .border(1.dp, BorderHairline, RoundedCornerShape(8.dp))
-                            .padding(3.dp)
+                            .padding(bottom = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            TransportMode.values().forEach { mode ->
-                                val isSelected = selectedMode == mode
-                                val label = when (mode) {
-                                    TransportMode.WIFI -> "Wi-Fi"
-                                    TransportMode.USB -> "USB"
-                                    TransportMode.BLUETOOTH -> "Bluetooth"
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(if (isSelected) Color(0xFF252A34) else Color.Transparent)
-                                        .clickable(enabled = !state.isStreaming) { selectedMode = mode }
-                                        .padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = label,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                        color = if (isSelected) TextPrimary else TextSecondary
-                                    )
+                        Text(
+                            text = "Transport",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextSecondary
+                        )
+                        Text(
+                            text = when (selectedMode) {
+                                TransportMode.WIFI -> "Wi-Fi Ready"
+                                TransportMode.USB -> "USB Ready"
+                                TransportMode.BLUETOOTH -> "Bluetooth Ready"
+                            },
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = StudioGreen
+                        )
+                    }
+
+                    // Liquid Glass Dock Capsule (Waterline Pill)
+                    LiquidGlassDockSlider(
+                        selectedMode = selectedMode,
+                        onModeSelected = { mode ->
+                            if (mode != selectedMode) {
+                                if (state.isStreaming) {
+                                    pendingMode = mode
+                                    showSwitchDialog = true
+                                } else {
+                                    selectedMode = mode
                                 }
                             }
                         }
-                    }
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -452,28 +454,81 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(enabled = state.isStreaming) {
+                                Toast.makeText(context, "Noise suppression is locked while broadcasting.", Toast.LENGTH_SHORT).show()
+                            }
+                            .padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Noise suppression", fontSize = 13.sp, color = TextPrimary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Noise suppression",
+                                fontSize = 13.sp,
+                                color = if (state.isStreaming) TextMuted else TextPrimary
+                            )
+                            if (state.isStreaming) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("🔒", fontSize = 11.sp)
+                            }
+                        }
                         Switch(
                             checked = enableNs,
-                            onCheckedChange = { enableNs = it },
-                            enabled = !state.isStreaming
+                            onCheckedChange = { if (!state.isStreaming) enableNs = it },
+                            enabled = !state.isStreaming,
+                            colors = SwitchDefaults.colors(
+                                disabledCheckedThumbColor = StudioGreen.copy(alpha = 0.6f),
+                                disabledCheckedTrackColor = StudioGreen.copy(alpha = 0.25f),
+                                disabledUncheckedThumbColor = Color(0xFF6B7280).copy(alpha = 0.4f),
+                                disabledUncheckedTrackColor = Color(0xFF374151).copy(alpha = 0.2f)
+                            )
                         )
                     }
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(enabled = state.isStreaming) {
+                                Toast.makeText(context, "Echo cancellation is locked while broadcasting.", Toast.LENGTH_SHORT).show()
+                            }
+                            .padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Echo cancellation", fontSize = 13.sp, color = TextPrimary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Echo cancellation",
+                                fontSize = 13.sp,
+                                color = if (state.isStreaming) TextMuted else TextPrimary
+                            )
+                            if (state.isStreaming) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("🔒", fontSize = 11.sp)
+                            }
+                        }
                         Switch(
                             checked = enableAec,
-                            onCheckedChange = { enableAec = it },
-                            enabled = !state.isStreaming
+                            onCheckedChange = { if (!state.isStreaming) enableAec = it },
+                            enabled = !state.isStreaming,
+                            colors = SwitchDefaults.colors(
+                                disabledCheckedThumbColor = StudioGreen.copy(alpha = 0.6f),
+                                disabledCheckedTrackColor = StudioGreen.copy(alpha = 0.25f),
+                                disabledUncheckedThumbColor = Color(0xFF6B7280).copy(alpha = 0.4f),
+                                disabledUncheckedTrackColor = Color(0xFF374151).copy(alpha = 0.2f)
+                            )
+                        )
+                    }
+
+                    if (state.isStreaming) {
+                        Text(
+                            text = "🔒 Hardware DSP filters are locked while broadcast is on air.",
+                            fontSize = 11.sp,
+                            color = TextMuted,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
                 }
@@ -579,6 +634,234 @@ fun MainScreen(
                             text = if (state.isMuted) "Unmute" else "Mute",
                             color = if (state.isMuted) StudioRed else TextPrimary,
                             fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+
+        if (showSwitchDialog && pendingMode != null) {
+            val target = pendingMode!!
+            val currentName = when (selectedMode) {
+                TransportMode.WIFI -> "Wi-Fi"
+                TransportMode.USB -> "USB"
+                TransportMode.BLUETOOTH -> "Bluetooth"
+            }
+            val targetName = when (target) {
+                TransportMode.WIFI -> "Wi-Fi"
+                TransportMode.USB -> "USB"
+                TransportMode.BLUETOOTH -> "Bluetooth"
+            }
+
+            AlertDialog(
+                onDismissRequest = {
+                    showSwitchDialog = false
+                    pendingMode = null
+                },
+                containerColor = Color(0xFF141923),
+                titleContentColor = TextPrimary,
+                textContentColor = TextSecondary,
+                shape = RoundedCornerShape(16.dp),
+                title = {
+                    Text("Switch Connection Mode?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                },
+                text = {
+                    Text("Your active $currentName broadcast will be stopped to switch to $targetName mode.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onStop()
+                            selectedMode = target
+                            showSwitchDialog = false
+                            pendingMode = null
+                            Toast.makeText(context, "Stopped $currentName. Switched to $targetName.", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = StudioRed),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Stop & Switch", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showSwitchDialog = false
+                            pendingMode = null
+                        }
+                    ) {
+                        Text("Keep Broadcasting", color = TextSecondary)
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun LiquidGlassDockSlider(
+    selectedMode: TransportMode,
+    onModeSelected: (TransportMode) -> Unit
+) {
+    val modes = listOf(TransportMode.WIFI, TransportMode.USB, TransportMode.BLUETOOTH)
+    val selectedIndex = modes.indexOf(selectedMode).coerceAtLeast(0)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp)
+            .clip(RoundedCornerShape(23.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF0F141F), Color(0xFF080B12))
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(Color(0x40FFFFFF), Color(0x10FFFFFF))
+                ),
+                RoundedCornerShape(23.dp)
+            )
+            .padding(3.dp)
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val tabWidth = maxWidth / 3
+
+            val animatedX by animateDpAsState(
+                targetValue = tabWidth * selectedIndex,
+                animationSpec = spring(
+                    dampingRatio = 0.75f,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                label = "LiquidWaterlineDrop"
+            )
+
+            // Liquid Sliding Water Drop
+            Box(
+                modifier = Modifier
+                    .offset(x = animatedX)
+                    .width(tabWidth)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0x38FFFFFF),
+                                Color(0x2810B981),
+                                Color(0x14082216)
+                            ),
+                            center = Offset(Float.POSITIVE_INFINITY, 0f),
+                            radius = 200f
+                        )
+                    )
+                    .border(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(Color(0x90FFFFFF), Color(0x2510B981))
+                        ),
+                        RoundedCornerShape(20.dp)
+                    )
+            )
+
+            // 3 Interactive Tabs
+            Row(modifier = Modifier.fillMaxSize()) {
+                modes.forEach { mode ->
+                    val isSelected = mode == selectedMode
+                    val activeColor = Color.White
+                    val inactiveColor = Color(0xFF8B949E)
+                    val iconColor by animateColorAsState(
+                        targetValue = if (isSelected) StudioGreen else inactiveColor,
+                        label = "IconColor"
+                    )
+                    val textColor by animateColorAsState(
+                        targetValue = if (isSelected) activeColor else inactiveColor,
+                        label = "TextColor"
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onModeSelected(mode)
+                            },
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        when (mode) {
+                            TransportMode.WIFI -> {
+                                Canvas(modifier = Modifier.size(14.dp)) {
+                                    val w = size.width
+                                    val h = size.height
+                                    drawCircle(color = iconColor, radius = 1.6.dp.toPx(), center = Offset(w / 2f, h * 0.85f))
+                                    drawArc(
+                                        color = iconColor,
+                                        startAngle = 210f,
+                                        sweepAngle = 120f,
+                                        useCenter = false,
+                                        topLeft = Offset(w * 0.22f, h * 0.42f),
+                                        size = Size(w * 0.56f, h * 0.56f),
+                                        style = Stroke(width = 1.6f.dp.toPx(), cap = StrokeCap.Round)
+                                    )
+                                    drawArc(
+                                        color = iconColor,
+                                        startAngle = 215f,
+                                        sweepAngle = 110f,
+                                        useCenter = false,
+                                        topLeft = Offset(w * 0.04f, h * 0.12f),
+                                        size = Size(w * 0.92f, h * 0.92f),
+                                        style = Stroke(width = 1.6f.dp.toPx(), cap = StrokeCap.Round)
+                                    )
+                                }
+                            }
+                            TransportMode.USB -> {
+                                Canvas(modifier = Modifier.size(14.dp)) {
+                                    val w = size.width
+                                    val h = size.height
+                                    drawLine(color = iconColor, start = Offset(w * 0.5f, h * 0.2f), end = Offset(w * 0.5f, h * 0.85f), strokeWidth = 1.5f.dp.toPx(), cap = StrokeCap.Round)
+                                    drawCircle(color = iconColor, radius = 1.7.dp.toPx(), center = Offset(w * 0.5f, h * 0.85f))
+                                    drawLine(color = iconColor, start = Offset(w * 0.5f, h * 0.55f), end = Offset(w * 0.2f, h * 0.42f), strokeWidth = 1.4f.dp.toPx(), cap = StrokeCap.Round)
+                                    drawCircle(color = iconColor, radius = 1.4.dp.toPx(), center = Offset(w * 0.2f, h * 0.4f))
+                                    drawLine(color = iconColor, start = Offset(w * 0.5f, h * 0.45f), end = Offset(w * 0.8f, h * 0.35f), strokeWidth = 1.4f.dp.toPx(), cap = StrokeCap.Round)
+                                    drawRect(color = iconColor, topLeft = Offset(w * 0.72f, h * 0.24f), size = Size(2.6.dp.toPx(), 2.6.dp.toPx()))
+                                    drawLine(color = iconColor, start = Offset(w * 0.5f, h * 0.15f), end = Offset(w * 0.35f, h * 0.28f), strokeWidth = 1.4f.dp.toPx(), cap = StrokeCap.Round)
+                                    drawLine(color = iconColor, start = Offset(w * 0.5f, h * 0.15f), end = Offset(w * 0.65f, h * 0.28f), strokeWidth = 1.4f.dp.toPx(), cap = StrokeCap.Round)
+                                }
+                            }
+                            TransportMode.BLUETOOTH -> {
+                                Canvas(modifier = Modifier.size(14.dp)) {
+                                    val w = size.width
+                                    val h = size.height
+                                    val path = androidx.compose.ui.graphics.Path().apply {
+                                        moveTo(w * 0.5f, h * 0.08f)
+                                        lineTo(w * 0.5f, h * 0.92f)
+                                        moveTo(w * 0.22f, h * 0.32f)
+                                        lineTo(w * 0.78f, h * 0.68f)
+                                        lineTo(w * 0.5f, h * 0.92f)
+                                        lineTo(w * 0.5f, h * 0.08f)
+                                        lineTo(w * 0.78f, h * 0.32f)
+                                        lineTo(w * 0.22f, h * 0.68f)
+                                    }
+                                    drawPath(path = path, color = iconColor, style = Stroke(width = 1.5f.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Text(
+                            text = when (mode) {
+                                TransportMode.WIFI -> "Wi-Fi"
+                                TransportMode.USB -> "USB"
+                                TransportMode.BLUETOOTH -> "Bluetooth"
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = textColor
                         )
                     }
                 }

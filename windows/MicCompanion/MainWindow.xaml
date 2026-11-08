@@ -86,28 +86,18 @@
             <Setter Property="FontSize" Value="12"/>
         </Style>
 
-        <!-- Segmented Radio Button for Transports -->
-        <Style x:Key="SegmentedRadio" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Medium"/>
+        <!-- Liquid Glass Dock Item Button -->
+        <Style x:Key="LiquidDockItem" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="14,7">
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent" CornerRadius="18">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#252A34"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#E6EDF3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -146,22 +136,92 @@
             </Border>
         </Grid>
 
-        <!-- 2. Connection Transport Selector (Segmented Hardware Well) -->
-        <Border Grid.Row="1" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+        <!-- 2. Connection Transport Selector (Liquid Glass Dock Slider) -->
+        <Border Grid.Row="1" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="Transport" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,10"/>
-                
-                <!-- Recessed Segmented Track -->
-                <Border Background="#0D0F13" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="8" Padding="3">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <RadioButton x:Name="RbWifi" Content="Wi-Fi" IsChecked="True" Style="{StaticResource SegmentedRadio}" Grid.Column="0"/>
-                        <RadioButton x:Name="RbUsb" Content="USB" Style="{StaticResource SegmentedRadio}" Grid.Column="1"/>
-                        <RadioButton x:Name="RbBluetooth" Content="Bluetooth" Style="{StaticResource SegmentedRadio}" Grid.Column="2"/>
+                <Grid Margin="0,0,0,10">
+                    <TextBlock Text="Transport" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock x:Name="TxtModeBadge" Text="Wi-Fi Ready" FontSize="10" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right"/>
+                </Grid>
+
+                <!-- Liquid Glass Dock Capsule (Waterline Pill) -->
+                <Border Background="#090D15" BorderThickness="1" CornerRadius="22" Padding="4" Height="46">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#40FFFFFF" Offset="0.0"/>
+                            <GradientStop Color="#10FFFFFF" Offset="1.0"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.5"/>
+                    </Border.Effect>
+
+                    <Grid x:Name="DockSliderTrack" SizeChanged="DockSliderTrack_SizeChanged">
+                        <!-- Sliding Liquid Glass Water Drop -->
+                        <Border x:Name="LiquidIndicator"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Stretch"
+                                CornerRadius="18"
+                                BorderThickness="1">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="LiquidTransform" X="0" Y="0"/>
+                            </Border.RenderTransform>
+                            <Border.BorderBrush>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#90FFFFFF" Offset="0.0"/>
+                                    <GradientStop Color="#2510B981" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </Border.BorderBrush>
+                            <Border.Background>
+                                <RadialGradientBrush Center="0.5,0.2" RadiusX="0.8" RadiusY="1.1">
+                                    <GradientStop Color="#38FFFFFF" Offset="0.0"/>
+                                    <GradientStop Color="#2810B981" Offset="0.5"/>
+                                    <GradientStop Color="#140A261A" Offset="1.0"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#10B981" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
+                            </Border.Effect>
+                        </Border>
+
+                        <!-- 3 Transport Items -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Wi-Fi Item -->
+                            <Button x:Name="BtnModeWifi" Grid.Column="0" Tag="WIFI" Style="{StaticResource LiquidDockItem}" Click="BtnMode_Click">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path x:Name="IconWifi" Width="15" Height="15" Stretch="Uniform" Margin="0,0,8,0"
+                                          Data="M12 18c.8 0 1.5.7 1.5 1.5S12.8 21 12 21s-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zm-5-4.2c2.8-2.4 7.2-2.4 10 0l-1.4 1.4c-2-1.7-5.2-1.7-7.2 0l-1.4-1.4zm-4-4c5-4.3 13-4.3 18 0l-1.4 1.4c-4.2-3.6-11-3.6-15.2 0L3 9.8z"
+                                          Fill="#10B981"/>
+                                    <TextBlock x:Name="TxtWifi" Text="Wi-Fi" FontWeight="Bold" FontSize="13" Foreground="#FFFFFF"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- USB Item -->
+                            <Button x:Name="BtnModeUsb" Grid.Column="1" Tag="USB" Style="{StaticResource LiquidDockItem}" Click="BtnMode_Click">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path x:Name="IconUsb" Width="15" Height="15" Stretch="Uniform" Margin="0,0,8,0"
+                                          Data="M15 7v4h1v2h-3V5h2l-3-4-3 4h2v8H8v-2h1V7H5v4h1v3c0 1.1.9 2 2 2h3v3.1c-.6.2-1 .8-1 1.4 0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5c0-.6-.4-1.2-1-1.4V16h3c1.1 0 2-.9 2-2v-3h1V7h-4z"
+                                          Fill="#8B949E"/>
+                                    <TextBlock x:Name="TxtUsb" Text="USB" FontWeight="Medium" FontSize="13" Foreground="#8B949E"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Bluetooth Item -->
+                            <Button x:Name="BtnModeBluetooth" Grid.Column="2" Tag="BLUETOOTH" Style="{StaticResource LiquidDockItem}" Click="BtnMode_Click">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path x:Name="IconBluetooth" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0"
+                                          Data="M14.88 16.29L12 13.41V21l4.47-3.58a1 1 0 0 0 .41-1.13zm-2.88-5.7L14.88 7.71a1 1 0 0 0-.41-1.13L10 3v7.59zm-2 0H5v2h5v2.59l4.88 4.88-4.88 3.9V23h2l7-5.6a1 1 0 0 0 .37-.78 1 1 0 0 0-.37-.78L13.41 12l5.47-5.46a1 1 0 0 0 .37-.78 1 1 0 0 0-.37-.78L12 0H10v8.41L5.12 3.54 3.71 4.95 8.76 10H5v2h3.76l-5.05 5.05 1.41 1.41L10 13.41V10.59z"
+                                          Fill="#8B949E"/>
+                                    <TextBlock x:Name="TxtBluetooth" Text="Bluetooth" FontWeight="Medium" FontSize="13" Foreground="#8B949E"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                     </Grid>
                 </Border>
 
@@ -175,7 +235,7 @@
                     <Button x:Name="BtnConnect" Content="Start receiver" Style="{StaticResource BroadcastButton}" Width="140" Height="36" Click="BtnConnect_Click" Grid.Column="0"/>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0">
-                        <TextBlock x:Name="TxtStatus" Text="Ready to connect" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                        <TextBlock x:Name="TxtStatus" Text="Ready to connect via Wi-Fi" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>

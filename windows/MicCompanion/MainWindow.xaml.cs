@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using Color = System.Windows.Media.Color;
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
     private bool _isStarted = false;
     private bool _isMuted = false;
     private bool _isRealExit = false;
+    private string _selectedTransportMode = "WIFI";
 
     private List<AudioDeviceItem> _deviceList = new();
 
@@ -75,6 +77,7 @@ public partial class MainWindow : Window
         InitializeMeterSegments();
         PopulateOutputDevices();
         ChkStartup.IsChecked = StartupHelper.IsRunAtStartup();
+        UpdateLiquidIndicatorPosition(false);
         _meterTimer.Start();
         _discoveryService.Start();
         AppendLog("EZmic studio bridge initialized.");
@@ -255,6 +258,115 @@ public partial class MainWindow : Window
         }
     }
 
+    private static string GetModeDisplayName(string mode) => mode switch
+    {
+        "USB" => "USB",
+        "BLUETOOTH" => "Bluetooth",
+        _ => "Wi-Fi"
+    };
+
+    private static int GetModeIndex(string mode) => mode switch
+    {
+        "USB" => 1,
+        "BLUETOOTH" => 2,
+        _ => 0
+    };
+
+    private void DockSliderTrack_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateLiquidIndicatorPosition(false);
+    }
+
+    private void UpdateLiquidIndicatorPosition(bool animate)
+    {
+        double trackWidth = DockSliderTrack.ActualWidth;
+        if (trackWidth <= 0) return;
+
+        double slotWidth = trackWidth / 3.0;
+        LiquidIndicator.Width = slotWidth;
+
+        int index = GetModeIndex(_selectedTransportMode);
+        double targetX = index * slotWidth;
+
+        if (animate)
+        {
+            var anim = new DoubleAnimation
+            {
+                To = targetX,
+                Duration = TimeSpan.FromMilliseconds(300),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            LiquidTransform.BeginAnimation(TranslateTransform.XProperty, anim);
+        }
+        else
+        {
+            LiquidTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            LiquidTransform.X = targetX;
+        }
+
+        UpdateDockVisuals();
+    }
+
+    private void UpdateDockVisuals()
+    {
+        bool isWifi = _selectedTransportMode == "WIFI";
+        bool isUsb = _selectedTransportMode == "USB";
+        bool isBt = _selectedTransportMode == "BLUETOOTH";
+
+        var activeFg = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
+        var inactiveFg = new SolidColorBrush(Color.FromRgb(0x8B, 0x94, 0x9E));
+        var emerald = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
+
+        TxtWifi.Foreground = isWifi ? activeFg : inactiveFg;
+        TxtWifi.FontWeight = isWifi ? FontWeights.Bold : FontWeights.Medium;
+        IconWifi.Fill = isWifi ? emerald : inactiveFg;
+
+        TxtUsb.Foreground = isUsb ? activeFg : inactiveFg;
+        TxtUsb.FontWeight = isUsb ? FontWeights.Bold : FontWeights.Medium;
+        IconUsb.Fill = isUsb ? emerald : inactiveFg;
+
+        TxtBluetooth.Foreground = isBt ? activeFg : inactiveFg;
+        TxtBluetooth.FontWeight = isBt ? FontWeights.Bold : FontWeights.Medium;
+        IconBluetooth.Fill = isBt ? emerald : inactiveFg;
+
+        TxtModeBadge.Text = $"{GetModeDisplayName(_selectedTransportMode)} Ready";
+    }
+
+    private async void BtnMode_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string newMode) return;
+        if (newMode == _selectedTransportMode) return;
+
+        string currentModeDisplay = GetModeDisplayName(_selectedTransportMode);
+        string newModeDisplay = GetModeDisplayName(newMode);
+
+        if (_isStarted)
+        {
+            var result = System.Windows.MessageBox.Show(
+                $"The active {currentModeDisplay} receiver is currently running.\n\nDo you want to stop it and switch to {newModeDisplay} mode?",
+                "Switch Connection Mode",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            AppendLog($"Stopping {currentModeDisplay} receiver to switch to {newModeDisplay}...");
+            await StopSessionAsync();
+        }
+
+        _selectedTransportMode = newMode;
+        UpdateLiquidIndicatorPosition(true);
+
+        if (!_isStarted)
+        {
+            TxtStatus.Text = $"Ready to connect via {newModeDisplay}";
+        }
+        AppendLog($"Switched transport mode to {newModeDisplay}.");
+    }
+
     private async Task StartSessionAsync()
     {
         if (CmbOutputDevices.SelectedIndex < 0 || CmbOutputDevices.SelectedIndex >= _deviceList.Count)
@@ -267,17 +379,20 @@ public partial class MainWindow : Window
 
         try
         {
+            // Lock endpoint selection while active to prevent stream crashes
+            CmbOutputDevices.IsEnabled = false;
+
             // 1. Start audio output
             _audioManager.Start(selectedDevice.Id);
 
             // 2. Select transport
-            if (RbWifi.IsChecked == true)
+            if (_selectedTransportMode == "WIFI")
             {
                 var wifi = new WifiAudioReceiver();
                 _currentTransport = wifi;
                 _discoveryService.Start();
             }
-            else if (RbUsb.IsChecked == true)
+            else if (_selectedTransportMode == "USB")
             {
                 _currentTransport = new UsbAdbReceiver();
             }
@@ -321,12 +436,14 @@ public partial class MainWindow : Window
         _audioManager.Stop();
 
         _isStarted = false;
+        CmbOutputDevices.IsEnabled = true;
+
         BtnConnect.Content = "Start receiver";
         BtnConnect.Background = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
         BtnConnect.Foreground = new SolidColorBrush(Color.FromRgb(0x04, 0x2F, 0x1E));
         BtnConnect.BorderThickness = new Thickness(0);
 
-        TxtStatus.Text = "Ready to connect";
+        TxtStatus.Text = $"Ready to connect via {GetModeDisplayName(_selectedTransportMode)}";
         UpdateTallyState();
         _trayManager.UpdateStatus(false, "Standby");
         _targetLevel = 0f;
