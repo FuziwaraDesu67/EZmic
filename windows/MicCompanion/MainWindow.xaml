@@ -438,7 +438,7 @@
 
                 <!-- Check for Updates Action & Version Badge -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.1" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                     <Button x:Name="BtnCheckUpdates" Content="Check for updates" Background="Transparent" Foreground="#8B949E" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnCheckUpdates_Click">
                         <Button.Style>
                             <Style TargetType="Button">

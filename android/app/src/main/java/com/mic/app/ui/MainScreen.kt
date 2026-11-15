@@ -728,7 +728,7 @@ fun MainScreen(
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
                     Text(
-                        text = "EZmic v1.1",
+                        text = "EZmic v1.1.1",
                         fontSize = 11.sp,
                         color = TextMuted
                     )
@@ -747,11 +747,11 @@ fun MainScreen(
                             coroutineScope.launch {
                                 val info = UpdateChecker.check()
                                 isCheckingUpdate = false
-                                if (info != null && info.hasUpdate) {
+                                if (info != null) {
                                     updateInfo = info
                                     showUpdateDialog = true
                                 } else {
-                                    Toast.makeText(context, "EZmic is up to date (v1.1)", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Unable to check updates. Please check your internet connection.", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -770,7 +770,8 @@ fun MainScreen(
                 textContentColor = TextSecondary,
                 shape = RoundedCornerShape(16.dp),
                 title = {
-                    Text("New Update Available: ${info.latestVersion}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    val titleText = if (info.hasUpdate) "🎉 New Update: ${info.latestVersion}" else "EZmic ${info.latestVersion} (Latest)"
+                    Text(titleText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 },
                 text = {
                     Column {
@@ -783,7 +784,7 @@ fun MainScreen(
                             Spacer(modifier = Modifier.height(10.dp))
                         }
                         Text(
-                            text = "Download the latest APK to get new features and improvements.",
+                            text = if (info.hasUpdate) "Download the latest APK to get new features and improvements." else "You are already running the latest version. You can re-download the APK if needed.",
                             fontSize = 12.sp,
                             color = TextMuted
                         )

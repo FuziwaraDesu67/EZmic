@@ -43,13 +43,13 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ### Step 1: Download the Files
 Grab the latest release from the **[Releases Page](https://github.com/FuziwaraDesu67/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.1-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1/EZmic-v1.1-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.1.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1/EZmic-v1.1.apk) *(Native app, high quality)*
+- 💻 **Windows PC**: [**Download EZmic-v1.1.1-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.1/EZmic-v1.1.1-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.1.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.1/EZmic-v1.1.1.apk) *(Native app, high quality)*
 
 *(All versions available on the **[Releases](https://github.com/FuziwaraDesu67/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
-1. Double-click `EZmic-v1.1-win64.exe` on your PC.
+1. Double-click `EZmic-v1.1.1-win64.exe` on your PC.
 2. If you don't already have a virtual audio cable, the app will show a yellow banner:  
    👉 Click **"Install Free Cable"** (it downloads and installs VB-Audio Cable automatically in 10 seconds).
 3. Select your desired connection mode (**Wi-Fi**, **USB**, or **Bluetooth**) and click **Start receiver**.

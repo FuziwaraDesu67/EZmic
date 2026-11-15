@@ -646,11 +646,21 @@ public partial class MainWindow : Window
             {
                 Dispatcher.Invoke(() =>
                 {
-                    System.Windows.MessageBox.Show(
-                        $"You are running the latest version of EZmic ({UpdateManager.CurrentVersion}).",
-                        "EZmic Update",
-                        MessageBoxButton.OK,
+                    string latestTag = string.IsNullOrWhiteSpace(update.LatestVersion) ? UpdateManager.CurrentVersion : update.LatestVersion;
+                    var result = System.Windows.MessageBox.Show(
+                        $"You are running EZmic {UpdateManager.CurrentVersion} (Latest online: {latestTag}).\n\nWould you like to open the download banner to re-download or reinstall this release?",
+                        "EZmic Update Check",
+                        MessageBoxButton.YesNo,
                         MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        TxtUpdateTitle.Text = $"EZmic {latestTag}";
+                        string notes = update.ReleaseNotes;
+                        if (notes.Length > 120) notes = notes[..117] + "...";
+                        TxtUpdateNotes.Text = string.IsNullOrWhiteSpace(notes) ? "Re-download the latest official release." : notes;
+                        BorderUpdateBanner.Visibility = Visibility.Visible;
+                    }
                 });
             }
         }
