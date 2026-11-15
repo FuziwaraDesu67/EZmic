@@ -747,9 +747,11 @@ fun MainScreen(
                             coroutineScope.launch {
                                 val info = UpdateChecker.check(context)
                                 isCheckingUpdate = false
-                                if (info != null) {
+                                if (info != null && info.hasUpdate) {
                                     updateInfo = info
                                     showUpdateDialog = true
+                                } else if (info != null) {
+                                    Toast.makeText(context, "EZmic is up to date (${UpdateChecker.getAppVersion(context)})", Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(context, "Unable to check updates. Please check your internet connection.", Toast.LENGTH_SHORT).show()
                                 }
@@ -760,8 +762,8 @@ fun MainScreen(
             }
         }
 
-        // Automatic / Manual Update Alert Dialog
-        if (showUpdateDialog && updateInfo != null) {
+        // Automatic / Manual Update Alert Dialog (Only shown when an actual update is available)
+        if (showUpdateDialog && updateInfo != null && updateInfo!!.hasUpdate) {
             val info = updateInfo!!
             AlertDialog(
                 onDismissRequest = { showUpdateDialog = false },
@@ -770,8 +772,7 @@ fun MainScreen(
                 textContentColor = TextSecondary,
                 shape = RoundedCornerShape(16.dp),
                 title = {
-                    val titleText = if (info.hasUpdate) "🎉 New Update: ${info.latestVersion}" else "EZmic ${info.latestVersion} (Latest)"
-                    Text(titleText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("🎉 New Update: ${info.latestVersion}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 },
                 text = {
                     Column {

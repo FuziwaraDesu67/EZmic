@@ -642,26 +642,25 @@ public partial class MainWindow : Window
 
                 AppendLog($"Update available: {update.LatestVersion} (Current: {update.CurrentVersion})");
             }
-            else if (!silent)
+            else
             {
                 Dispatcher.Invoke(() =>
                 {
-                    string latestTag = string.IsNullOrWhiteSpace(update.LatestVersion) ? UpdateManager.CurrentVersion : update.LatestVersion;
-                    var result = System.Windows.MessageBox.Show(
-                        $"You are running EZmic {UpdateManager.CurrentVersion} (Latest online: {latestTag}).\n\nWould you like to open the download banner to re-download or reinstall this release?",
-                        "EZmic Update Check",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Information);
-
-                    if (result == MessageBoxResult.Yes)
+                    BorderUpdateBanner.Visibility = Visibility.Collapsed;
+                    if (!silent)
                     {
-                        TxtUpdateTitle.Text = $"EZmic {latestTag}";
-                        string notes = update.ReleaseNotes;
-                        if (notes.Length > 120) notes = notes[..117] + "...";
-                        TxtUpdateNotes.Text = string.IsNullOrWhiteSpace(notes) ? "Re-download the latest official release." : notes;
-                        BorderUpdateBanner.Visibility = Visibility.Visible;
+                        System.Windows.MessageBox.Show(
+                            $"EZmic is up to date ({UpdateManager.CurrentVersion}).",
+                            "EZmic",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
                     }
                 });
+
+                if (!silent)
+                {
+                    AppendLog($"EZmic is up to date ({UpdateManager.CurrentVersion}).");
+                }
             }
         }
         catch (Exception ex)
