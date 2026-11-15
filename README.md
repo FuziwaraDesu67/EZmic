@@ -5,7 +5,7 @@
 # EZmic 🎙️⚡
 
 > **Turn your Android smartphone into a high-fidelity, ultra-low latency microphone for your Windows PC over Wi-Fi, USB, or Bluetooth.**  
-> *Created with ❤️ by [@aadarsh765](https://github.com/aadarsh765)*
+> *Created with ❤️ by [@FuziwaraDesu67](https://github.com/FuziwaraDesu67)*
 
 Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, and **Steam Games** with zero complex setup.
 
@@ -42,14 +42,14 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 ## 🚀 60-Second Quick Start
 
 ### Step 1: Download the Files
-Grab the latest release from the **[Releases Page](https://github.com/aadarsh765/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.1-win64.exe**](https://github.com/aadarsh765/EZmic/releases/download/v1.1/EZmic-v1.1-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.1.apk**](https://github.com/aadarsh765/EZmic/releases/download/v1.1/EZmic-v1.1.apk) *(Native app, high quality)*
+Grab the latest release from the **[Releases Page](https://github.com/FuziwaraDesu67/EZmic/releases/latest)**:
+- 💻 **Windows PC**: [**Download EZmic-v1.1-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1/EZmic-v1.1-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1/EZmic-v1.1.apk) *(Native app, high quality)*
 
-*(All versions available on the **[Releases](https://github.com/aadarsh765/EZmic/releases)** tab)*
+*(All versions available on the **[Releases](https://github.com/FuziwaraDesu67/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
-1. Double-click `EZmic-v1.0-win64.exe` on your PC.
+1. Double-click `EZmic-v1.1-win64.exe` on your PC.
 2. If you don't already have a virtual audio cable, the app will show a yellow banner:  
    👉 Click **"Install Free Cable"** (it downloads and installs VB-Audio Cable automatically in 10 seconds).
 3. Select your desired connection mode (**Wi-Fi**, **USB**, or **Bluetooth**) and click **Start receiver**.
@@ -142,8 +142,8 @@ cd android
 
 ## 👨‍💻 Author & Contributions
 
-Created and maintained by **[@aadarsh765](https://github.com/aadarsh765)**.  
-Contributions, bug reports, and feature requests are welcome on [GitHub Issues](https://github.com/aadarsh765/EZmic/issues)!
+Created and maintained by **[@FuziwaraDesu67](https://github.com/FuziwaraDesu67)**.  
+Contributions, bug reports, and feature requests are welcome on [GitHub Issues](https://github.com/FuziwaraDesu67/EZmic/issues)!
 
 ---
 

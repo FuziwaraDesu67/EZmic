@@ -703,7 +703,7 @@ fun MainScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .clickable {
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/aadarsh765"))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FuziwaraDesu67"))
                                 context.startActivity(intent)
                             } catch (_: Exception) {}
                         }
@@ -715,7 +715,7 @@ fun MainScreen(
                         color = TextSecondary
                     )
                     Text(
-                        text = "aadarsh765",
+                        text = "FuziwaraDesu67",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = StudioGreen

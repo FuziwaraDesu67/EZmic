@@ -605,7 +605,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            Process.Start(new ProcessStartInfo("https://github.com/aadarsh765") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("https://github.com/FuziwaraDesu67") { UseShellExecute = true });
         }
         catch (Exception ex)
         {

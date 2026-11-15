@@ -20,7 +20,7 @@ public class UpdateInfo
 public static class UpdateManager
 {
     public const string CurrentVersion = "v1.1";
-    private const string RepoOwner = "aadarsh765";
+    private const string RepoOwner = "FuziwaraDesu67";
     private const string RepoName = "EZmic";
     private const string ApiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest";
 
