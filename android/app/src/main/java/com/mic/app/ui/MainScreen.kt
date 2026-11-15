@@ -785,7 +785,7 @@ fun MainScreen(
                             Spacer(modifier = Modifier.height(10.dp))
                         }
                         Text(
-                            text = if (info.hasUpdate) "Download the latest APK to get new features and improvements." else "You are already running the latest version. You can re-download the APK if needed.",
+                            text = "Download the latest APK to get new features and improvements.",
                             fontSize = 12.sp,
                             color = TextMuted
                         )
