@@ -1,6 +1,9 @@
 package com.mic.app.ui
 
 import android.bluetooth.BluetoothDevice
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
@@ -34,6 +37,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mic.app.service.StreamingState
+import com.mic.app.util.AppUpdateInfo
+import com.mic.app.util.UpdateChecker
+import kotlinx.coroutines.launch
 import kotlin.math.log10
 import kotlin.math.max
 
@@ -54,10 +60,16 @@ fun MainScreen(
     onDiscoverWifi: ((Discovered: (String, Int, String) -> Unit) -> Unit)
 ) {
     val context = LocalContext.current
-    var selectedMode by remember { mutableStateOf(TransportMode.USB) }
-    var wifiIp by remember { mutableStateOf("192.168.1.100") }
-    var wifiPort by remember { mutableStateOf("49152") }
-    var usbPort by remember { mutableStateOf("49153") }
+    val coroutineScope = rememberCoroutineScope()
+    val prefs = remember { context.getSharedPreferences("ezmic_prefs", Context.MODE_PRIVATE) }
+
+    var selectedMode by remember {
+        val saved = prefs.getString("selected_mode", TransportMode.USB.name)
+        mutableStateOf(try { TransportMode.valueOf(saved ?: TransportMode.USB.name) } catch (_: Exception) { TransportMode.USB })
+    }
+    var wifiIp by remember { mutableStateOf(prefs.getString("wifi_ip", "192.168.1.100") ?: "192.168.1.100") }
+    var wifiPort by remember { mutableStateOf(prefs.getString("wifi_port", "49152") ?: "49152") }
+    var usbPort by remember { mutableStateOf(prefs.getString("usb_port", "49153") ?: "49153") }
     var selectedDevice by remember { 
         mutableStateOf(
             pairedDevices.find { 
@@ -66,11 +78,48 @@ fun MainScreen(
             } ?: pairedDevices.firstOrNull()
         ) 
     }
-    var enableNs by remember { mutableStateOf(true) }
-    var enableAec by remember { mutableStateOf(true) }
-    var gainSlider by remember { mutableFloatStateOf(100f) }
+    var enableNs by remember { mutableStateOf(prefs.getBoolean("enable_ns", true)) }
+    var enableAec by remember { mutableStateOf(prefs.getBoolean("enable_aec", true)) }
+    var gainSlider by remember { mutableFloatStateOf(prefs.getFloat("gain_slider", 100f)) }
     var showSwitchDialog by remember { mutableStateOf(false) }
     var pendingMode by remember { mutableStateOf<TransportMode?>(null) }
+
+    // Update Checker state
+    var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+
+    // Auto-save preferences
+    LaunchedEffect(selectedMode) {
+        prefs.edit().putString("selected_mode", selectedMode.name).apply()
+    }
+    LaunchedEffect(wifiIp) {
+        prefs.edit().putString("wifi_ip", wifiIp).apply()
+    }
+    LaunchedEffect(wifiPort) {
+        prefs.edit().putString("wifi_port", wifiPort).apply()
+    }
+    LaunchedEffect(usbPort) {
+        prefs.edit().putString("usb_port", usbPort).apply()
+    }
+    LaunchedEffect(enableNs) {
+        prefs.edit().putBoolean("enable_ns", enableNs).apply()
+    }
+    LaunchedEffect(enableAec) {
+        prefs.edit().putBoolean("enable_aec", enableAec).apply()
+    }
+    LaunchedEffect(gainSlider) {
+        prefs.edit().putFloat("gain_slider", gainSlider).apply()
+    }
+
+    // Auto-check for updates on launch
+    LaunchedEffect(Unit) {
+        val info = UpdateChecker.check()
+        if (info != null && info.hasUpdate) {
+            updateInfo = info
+            showUpdateDialog = true
+        }
+    }
 
     // Ballistic animated level
     val animatedLevel by animateFloatAsState(
@@ -638,6 +687,129 @@ fun MainScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // 6. GitHub Author Attribution & Version Footer
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/aadarsh765"))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Created by ",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = "aadarsh765",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = StudioGreen
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(top = 2.dp)
+                ) {
+                    Text(
+                        text = "EZmic v1.1",
+                        fontSize = 11.sp,
+                        color = TextMuted
+                    )
+                    Text(
+                        text = "  •  ",
+                        fontSize = 11.sp,
+                        color = TextMuted
+                    )
+                    Text(
+                        text = if (isCheckingUpdate) "Checking..." else "Check for updates",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isCheckingUpdate) TextMuted else StudioGreen,
+                        modifier = Modifier.clickable(enabled = !isCheckingUpdate) {
+                            isCheckingUpdate = true
+                            coroutineScope.launch {
+                                val info = UpdateChecker.check()
+                                isCheckingUpdate = false
+                                if (info != null && info.hasUpdate) {
+                                    updateInfo = info
+                                    showUpdateDialog = true
+                                } else {
+                                    Toast.makeText(context, "EZmic is up to date (v1.1)", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+
+        // Automatic / Manual Update Alert Dialog
+        if (showUpdateDialog && updateInfo != null) {
+            val info = updateInfo!!
+            AlertDialog(
+                onDismissRequest = { showUpdateDialog = false },
+                containerColor = Color(0xFF141923),
+                titleContentColor = TextPrimary,
+                textContentColor = TextSecondary,
+                shape = RoundedCornerShape(16.dp),
+                title = {
+                    Text("New Update Available: ${info.latestVersion}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                },
+                text = {
+                    Column {
+                        if (info.releaseNotes.isNotBlank()) {
+                            Text(
+                                text = info.releaseNotes.take(300),
+                                fontSize = 13.sp,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+                        Text(
+                            text = "Download the latest APK to get new features and improvements.",
+                            fontSize = 12.sp,
+                            color = TextMuted
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.apkUrl))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                            showUpdateDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = StudioGreen),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Download APK", color = Color(0xFF042F1E), fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showUpdateDialog = false }) {
+                        Text("Later", color = TextSecondary)
+                    }
+                }
+            )
         }
 
         if (showSwitchDialog && pendingMode != null) {

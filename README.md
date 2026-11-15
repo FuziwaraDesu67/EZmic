@@ -4,9 +4,23 @@
 
 # EZmic 🎙️⚡
 
-> **Turn your Android smartphone into a high-fidelity, ultra-low latency microphone for your Windows PC over Wi-Fi, USB, or Bluetooth.**
+> **Turn your Android smartphone into a high-fidelity, ultra-low latency microphone for your Windows PC over Wi-Fi, USB, or Bluetooth.**  
+> *Created with ❤️ by [@aadarsh765](https://github.com/aadarsh765)*
 
 Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, and **Steam Games** with zero complex setup.
+
+---
+
+## ⚡ What's New in v1.1 🚀
+
+- 🎛️ **Studio Noise Gate & Anti-Clipping Limiter**: Adjustable threshold (-60 dB to -25 dB) with anti-click smooth envelope and visual LED activity indicator to completely cut out keyboard/fan noise.
+- 🎧 **Real-Time Sidetone ("Listen to Mic")**: Zero-latency hardware monitor routed directly to your headphones/speakers.
+- ⌨️ **Global Hotkey (`Ctrl+Shift+M`)**: Instant mic mute toggle from inside any full-screen game or application.
+- 📡 **LAN IP Badge & 1-Click Copy**: PC automatically displays its primary Wi-Fi IP with instant copy-to-clipboard for seamless manual pairing.
+- 🔄 **In-App Auto-Updater**: Both Windows companion and Android app check for new GitHub releases on launch and provide 1-click update downloads with release notes.
+- 🔔 **Android Notification Quick Actions**: Toggle mute and stop broadcast directly from your phone's lock screen or notification shade.
+- 💾 **Settings Persistence**: Gain levels, connection mode, Noise Gate thresholds, and IP addresses automatically save across app restarts.
+- 🔒 **Stream Lock Safeguards**: Automatic broadcast shutdown confirmation when switching transports on the fly, and locked DSP filters to prevent live audio glitches.
 
 ---
 
@@ -29,8 +43,8 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ### Step 1: Download the Files
 Grab the latest release from the **[Releases Page](https://github.com/aadarsh765/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.0-win64.exe**](https://github.com/aadarsh765/EZmic/releases/download/v1.0/EZmic-v1.0-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.0.apk**](https://github.com/aadarsh765/EZmic/releases/download/v1.0/EZmic-v1.0.apk) *(Native app, high quality)*
+- 💻 **Windows PC**: [**Download EZmic-v1.1-win64.exe**](https://github.com/aadarsh765/EZmic/releases/download/v1.1/EZmic-v1.1-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.apk**](https://github.com/aadarsh765/EZmic/releases/download/v1.1/EZmic-v1.1.apk) *(Native app, high quality)*
 
 *(All versions available on the **[Releases](https://github.com/aadarsh765/EZmic/releases)** tab)*
 
@@ -123,6 +137,13 @@ cd android
 ./gradlew assembleDebug
 # APK is generated at: app/build/outputs/apk/debug/app-debug.apk
 ```
+
+---
+
+## 👨‍💻 Author & Contributions
+
+Created and maintained by **[@aadarsh765](https://github.com/aadarsh765)**.  
+Contributions, bug reports, and feature requests are welcome on [GitHub Issues](https://github.com/aadarsh765/EZmic/issues)!
 
 ---
 

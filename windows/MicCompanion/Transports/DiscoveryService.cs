@@ -78,7 +78,7 @@ public class DiscoveryService : IDisposable
         }
     }
 
-    private static string GetPrimaryLanIp()
+    public static string GetPrimaryLanIp()
     {
         try
         {

@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="EZmic" 
         Icon="Assets/icon.png"
-        Height="680" Width="460"
-        MinHeight="620" MinWidth="420"
+        Height="760" Width="480"
+        MinHeight="680" MinWidth="440"
         WindowStartupLocation="CenterScreen"
         Background="#0D0E12" Foreground="#E6EDF3">
 
@@ -109,19 +109,50 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="18">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Header & Tally -->
-            <RowDefinition Height="Auto"/> <!-- Transport Segmented Bar -->
-            <RowDefinition Height="Auto"/> <!-- Audio Output -->
-            <RowDefinition Height="Auto"/> <!-- Precision LED Meter -->
-            <RowDefinition Height="Auto"/> <!-- Gain & Mute Controls -->
-            <RowDefinition Height="*"/>    <!-- Activity Terminal -->
-            <RowDefinition Height="Auto"/> <!-- Footer -->
+            <RowDefinition Height="Auto"/> <!-- 0: Dynamic Update Banner -->
+            <RowDefinition Height="Auto"/> <!-- 1: Header & Tally -->
+            <RowDefinition Height="Auto"/> <!-- 2: Transport Liquid Dock & LAN IP -->
+            <RowDefinition Height="Auto"/> <!-- 3: Audio Endpoint -->
+            <RowDefinition Height="Auto"/> <!-- 4: Precision LED Meter -->
+            <RowDefinition Height="Auto"/> <!-- 5: Gain, Noise Gate & Sidetone Controls -->
+            <RowDefinition Height="*"/>    <!-- 6: Compact Activity Log -->
+            <RowDefinition Height="Auto"/> <!-- 7: Footer Options -->
+            <RowDefinition Height="Auto"/> <!-- 8: GitHub Profile Attribution -->
         </Grid.RowDefinitions>
 
+        <!-- 0. Dynamic Update Notification Pop-up Banner -->
+        <Border x:Name="BorderUpdateBanner" Grid.Row="0" Background="#14231E" BorderBrush="#10B981" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🚀" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtUpdateTitle" Text="New update available: v1.1" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button x:Name="BtnDismissUpdate" Content="✕" Grid.Column="1" Background="Transparent" Foreground="#8B949E" BorderThickness="0" Cursor="Hand" Click="BtnDismissUpdate_Click" Padding="4,0" FontSize="12"/>
+                </Grid>
+                <TextBlock x:Name="TxtUpdateNotes" Text="Low-latency updates, noise gate &amp; hotkey support." FontSize="11" Foreground="#A7F3D0" Margin="22,3,0,8" TextWrapping="Wrap"/>
+
+                <Grid Margin="22,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="BtnApplyUpdate" Content="Download &amp; Update" Grid.Column="0" Click="BtnApplyUpdate_Click" Padding="12,4" Height="26" FontSize="11" Background="#10B981" Foreground="#042F1E" FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
+                    <Button x:Name="BtnViewReleaseNotes" Content="View Release" Grid.Column="1" Click="BtnViewReleaseNotes_Click" Margin="8,0,0,0" Padding="10,4" Height="26" FontSize="11" Background="#1E293B" Foreground="#E2E8F0" FontWeight="Medium" Cursor="Hand" BorderThickness="0"/>
+                    <ProgressBar x:Name="ProgressUpdate" Grid.Column="2" Height="6" VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed" Maximum="100" Foreground="#10B981" Background="#1E293B"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
         <!-- 1. Header with Live Tally Pill -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -142,7 +173,7 @@
         </Grid>
 
         <!-- 2. Connection Transport Selector (Liquid Glass Dock Slider) -->
-        <Border Grid.Row="1" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
+        <Border Grid.Row="2" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
             <StackPanel>
                 <Grid Margin="0,0,0,10">
                     <TextBlock Text="Transport" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
@@ -244,11 +275,20 @@
                         <TextBlock x:Name="TxtStatus" Text="Ready to connect via Wi-Fi" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
                     </StackPanel>
                 </Grid>
+
+                <!-- Wi-Fi LAN IP & Global Hotkey Pill -->
+                <Grid Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="PC Wi-Fi IP: " FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                        <TextBlock x:Name="TxtLanIp" Text="Detecting..." FontSize="11" FontWeight="SemiBold" Foreground="#10B981" Cursor="Hand" ToolTip="Click to copy IP address" MouseLeftButtonDown="TxtLanIp_MouseLeftButtonDown"/>
+                    </StackPanel>
+                    <TextBlock Text="Mute Hotkey: Ctrl+Shift+M" FontSize="10" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
             </StackPanel>
         </Border>
 
         <!-- 3. Target Audio Endpoint Selection -->
-        <Border Grid.Row="2" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+        <Border Grid.Row="3" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
             <StackPanel>
                 <Grid Margin="0,0,0,6">
                     <TextBlock Text="Audio endpoint" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
@@ -272,7 +312,7 @@
         </Border>
 
         <!-- 4. Hero Moment: Precision Segmented 24-LED Broadcast VU Meter -->
-        <Border Grid.Row="3" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+        <Border Grid.Row="4" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
             <StackPanel>
                 <Grid Margin="0,0,0,8">
                     <TextBlock Text="Input level" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
@@ -302,29 +342,59 @@
             </StackPanel>
         </Border>
 
-        <!-- 5. Gain Fader & Hardware Mute -->
-        <Border Grid.Row="4" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- 5. Gain, Studio Noise Gate, Sidetone & Hardware Mute -->
+        <Border Grid.Row="5" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
+            <StackPanel>
+                <!-- Gain Fader & Hardware Mute Button -->
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                    <Grid Margin="0,0,0,6">
-                        <TextBlock Text="Gain" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
-                        <TextBlock x:Name="TxtGainValue" Text="100%" FontSize="11" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
-                    </Grid>
-                    <Slider x:Name="SliderGain" Minimum="50" Maximum="400" Value="100" 
-                            TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="SliderGain_ValueChanged"/>
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <Grid Margin="0,0,0,6">
+                            <TextBlock Text="Gain" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
+                            <TextBlock x:Name="TxtGainValue" Text="100%" FontSize="11" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Slider x:Name="SliderGain" Minimum="50" Maximum="400" Value="100" 
+                                TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="SliderGain_ValueChanged"/>
+                    </StackPanel>
 
-                <Button x:Name="BtnMute" Content="Mute" Style="{StaticResource HardwareButton}" Width="80" Height="36" Grid.Column="1" VerticalAlignment="Center" Click="BtnMute_Click"/>
-            </Grid>
+                    <Button x:Name="BtnMute" Content="Mute" Style="{StaticResource HardwareButton}" Width="80" Height="36" Grid.Column="1" VerticalAlignment="Center" Click="BtnMute_Click"/>
+                </Grid>
+
+                <Separator Background="{StaticResource BorderHairline}" Margin="0,0,0,10"/>
+
+                <!-- Studio Enhancements: Noise Gate & Sidetone Monitor -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Noise Gate Control -->
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <Grid Margin="0,0,0,4">
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox x:Name="ChkNoiseGate" Content="Noise gate" IsChecked="True" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" Click="ChkNoiseGate_Click" VerticalAlignment="Center"/>
+                                <Ellipse x:Name="DotGateStatus" Width="6" Height="6" Fill="#10B981" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="Gate Status"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtGateThreshold" Text="-45 dB" FontSize="10" FontFamily="Consolas, monospace" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                        <Slider x:Name="SliderNoiseGate" Minimum="-60" Maximum="-25" Value="-45" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SliderNoiseGate_ValueChanged"/>
+                    </StackPanel>
+
+                    <!-- Mic Monitor / Sidetone Checkbox -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                        <CheckBox x:Name="ChkSidetone" Content="Listen to mic" FontSize="11" Foreground="{StaticResource TextSecondary}" Click="ChkSidetone_Click" ToolTip="Hear yourself in headphones to check volume"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
         </Border>
 
         <!-- 6. Compact Terminal Log -->
-        <Border Grid.Row="5" Background="#090A0E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+        <Border Grid.Row="6" Background="#090A0E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
             <DockPanel>
                 <TextBlock Text="Activity" DockPanel.Dock="Top" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}" Margin="0,0,0,4"/>
                 <ScrollViewer x:Name="ScrollLog" VerticalScrollBarVisibility="Auto">
@@ -335,7 +405,7 @@
         </Border>
 
         <!-- 7. Footer Options -->
-        <Grid Grid.Row="6" Margin="2,0">
+        <Grid Grid.Row="7" Margin="2,0,2,6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -345,5 +415,43 @@
             <CheckBox x:Name="ChkMinimizeToTray" Content="Minimize to tray on close" IsChecked="True" Grid.Column="1" 
                       Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
         </Grid>
+
+        <!-- 8. GitHub Profile Attribution & Update Check -->
+        <Border Grid.Row="8" BorderBrush="{StaticResource BorderHairline}" BorderThickness="0,1,0,0" Padding="2,8,2,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- GitHub Author Profile Link -->
+                <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnAuthorProfile_Click" ToolTip="Visit aadarsh765 on GitHub">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- GitHub Octocat SVG Path -->
+                        <Path Width="14" Height="14" Stretch="Uniform" Fill="#8B949E" Margin="0,0,6,0"
+                              Data="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                        <TextBlock Text="Created by " FontSize="11" Foreground="{StaticResource TextMuted}"/>
+                        <TextBlock Text="aadarsh765" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" TextDecorations="Underline"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Check for Updates Action & Version Badge -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnCheckUpdates" Content="Check for updates" Background="Transparent" Foreground="#8B949E" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnCheckUpdates_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#10B981"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

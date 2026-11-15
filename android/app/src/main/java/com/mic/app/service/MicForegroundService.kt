@@ -45,6 +45,19 @@ class MicForegroundService : Service() {
 
     override fun onBind(intent: Intent?): IBinder = binder
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_TOGGLE_MUTE -> {
+                val currentMute = _streamingState.value.isMuted
+                setMute(!currentMute)
+            }
+            ACTION_STOP -> {
+                stopStreaming("Stopped from notification")
+            }
+        }
+        return START_NOT_STICKY
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -109,6 +122,7 @@ class MicForegroundService : Service() {
     fun setMute(muted: Boolean) {
         audioCaptureManager?.isMuted = muted
         _streamingState.value = _streamingState.value.copy(isMuted = muted)
+        updateNotification(_streamingState.value.statusMessage)
     }
 
     fun setGain(gain: Float) {
@@ -160,12 +174,37 @@ class MicForegroundService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val isMuted = _streamingState.value.isMuted
+        val muteIntent = PendingIntent.getService(
+            this,
+            1,
+            Intent(this, MicForegroundService::class.java).apply { action = ACTION_TOGGLE_MUTE },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val stopIntent = PendingIntent.getService(
+            this,
+            2,
+            Intent(this, MicForegroundService::class.java).apply { action = ACTION_STOP },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Mic to PC")
+            .setContentTitle(if (isMuted) "EZmic - MUTED" else "EZmic - ON AIR")
             .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(openIntent)
             .setOngoing(true)
+            .addAction(
+                android.R.drawable.ic_media_pause,
+                if (isMuted) "Unmute" else "Mute",
+                muteIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                "Stop",
+                stopIntent
+            )
             .build()
     }
 
@@ -183,6 +222,8 @@ class MicForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "mic_stream_channel"
         private const val NOTIFICATION_ID = 1001
+        const val ACTION_TOGGLE_MUTE = "com.mic.app.ACTION_TOGGLE_MUTE"
+        const val ACTION_STOP = "com.mic.app.ACTION_STOP"
     }
 }
 

@@ -1,5 +1,8 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
@@ -8,6 +11,8 @@ using Color = System.Windows.Media.Color;
 using Rectangle = System.Windows.Shapes.Rectangle;
 using Canvas = System.Windows.Controls.Canvas;
 using Button = System.Windows.Controls.Button;
+using ProgressBar = System.Windows.Controls.ProgressBar;
+using Clipboard = System.Windows.Clipboard;
 using MicCompanion.Audio;
 using MicCompanion.Transports;
 using MicCompanion.UI;
@@ -26,6 +31,9 @@ public partial class MainWindow : Window
     private bool _isRealExit = false;
     private string _selectedTransportMode = "WIFI";
     public string SelectedTransportMode => _selectedTransportMode;
+
+    private HotkeyManager? _hotkeyManager;
+    private UpdateInfo? _latestUpdateInfo;
 
     private List<AudioDeviceItem> _deviceList = new();
 
@@ -82,7 +90,26 @@ public partial class MainWindow : Window
         UpdateLiquidIndicatorPosition(false);
         _meterTimer.Start();
         _discoveryService.Start();
+
+        // Display local Wi-Fi IP for effortless pairing
+        TxtLanIp.Text = DiscoveryService.GetPrimaryLanIp();
+
+        // Register Global Mute Hotkey (Ctrl+Shift+M)
+        try
+        {
+            var helper = new WindowInteropHelper(this);
+            _hotkeyManager = new HotkeyManager(helper.Handle, ToggleMute);
+            AppendLog("Global hotkey registered: Ctrl+Shift+M (Mute toggle)");
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Hotkey registration note: {ex.Message}");
+        }
+
         AppendLog("EZmic studio bridge initialized.");
+
+        // Check for updates in background
+        _ = CheckForUpdatesBackgroundAsync(silent: true);
     }
 
     private void InitializeMeterSegments()
@@ -198,6 +225,10 @@ public partial class MainWindow : Window
             float db = 20f * (float)Math.Log10(_smoothedLevel);
             TxtLevelDecibel.Text = $"{db:0.0} dB";
         }
+
+        // Noise gate activity status indicator
+        bool gateOpen = _audioManager.Processor.IsGateOpen;
+        DotGateStatus.Fill = gateOpen ? new SolidColorBrush(ColorGreenActive) : new SolidColorBrush(Color.FromRgb(0x48, 0x4F, 0x58));
     }
 
     private void PopulateOutputDevices()
@@ -534,6 +565,156 @@ public partial class MainWindow : Window
         StartupHelper.SetRunAtStartup(ChkStartup.IsChecked == true);
     }
 
+    private void TxtLanIp_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        try
+        {
+            Clipboard.SetText(TxtLanIp.Text);
+            AppendLog($"Copied PC Wi-Fi IP to clipboard: {TxtLanIp.Text}");
+            _trayManager.ShowNotification("EZmic", $"Copied IP ({TxtLanIp.Text}) to clipboard.");
+        }
+        catch { }
+    }
+
+    private void ChkNoiseGate_Click(object sender, RoutedEventArgs e)
+    {
+        bool isEnabled = ChkNoiseGate.IsChecked == true;
+        _audioManager.Processor.NoiseGateEnabled = isEnabled;
+        AppendLog($"Studio noise gate {(isEnabled ? "enabled" : "disabled")}.");
+    }
+
+    private void SliderNoiseGate_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TxtGateThreshold == null) return;
+        int db = (int)e.NewValue;
+        TxtGateThreshold.Text = $"{db} dB";
+        if (_audioManager != null)
+        {
+            _audioManager.Processor.NoiseGateThresholdDb = db;
+        }
+    }
+
+    private void ChkSidetone_Click(object sender, RoutedEventArgs e)
+    {
+        bool enabled = ChkSidetone.IsChecked == true;
+        _audioManager.IsMonitorEnabled = enabled;
+        AppendLog(enabled ? "Mic monitor (sidetone) enabled in headphones." : "Mic monitor disabled.");
+    }
+
+    private void BtnAuthorProfile_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/aadarsh765") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Unable to open browser: {ex.Message}");
+        }
+    }
+
+    private async void BtnCheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        BtnCheckUpdates.IsEnabled = false;
+        BtnCheckUpdates.Content = "Checking...";
+        await CheckForUpdatesBackgroundAsync(silent: false);
+        BtnCheckUpdates.IsEnabled = true;
+        BtnCheckUpdates.Content = "Check for updates";
+    }
+
+    private async Task CheckForUpdatesBackgroundAsync(bool silent)
+    {
+        try
+        {
+            var update = await UpdateManager.CheckForUpdatesAsync();
+            _latestUpdateInfo = update;
+
+            if (update.IsUpdateAvailable)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    TxtUpdateTitle.Text = $"🎉 New update available: {update.LatestVersion}";
+                    string notes = update.ReleaseNotes;
+                    if (notes.Length > 120) notes = notes[..117] + "...";
+                    TxtUpdateNotes.Text = string.IsNullOrWhiteSpace(notes) ? "New stability, audio quality & low-latency improvements." : notes;
+                    BorderUpdateBanner.Visibility = Visibility.Visible;
+                });
+
+                AppendLog($"Update available: {update.LatestVersion} (Current: {update.CurrentVersion})");
+            }
+            else if (!silent)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    System.Windows.MessageBox.Show(
+                        $"You are running the latest version of EZmic ({UpdateManager.CurrentVersion}).",
+                        "EZmic Update",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!silent)
+            {
+                AppendLog($"Update check failed: {ex.Message}");
+            }
+        }
+    }
+
+    private void BtnDismissUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        BorderUpdateBanner.Visibility = Visibility.Collapsed;
+    }
+
+    private void BtnViewReleaseNotes_Click(object sender, RoutedEventArgs e)
+    {
+        string url = _latestUpdateInfo?.ReleaseUrl ?? "https://github.com/aadarsh765/EZmic/releases";
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch { }
+    }
+
+    private async void BtnApplyUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_latestUpdateInfo == null || string.IsNullOrEmpty(_latestUpdateInfo.DownloadUrl))
+        {
+            BtnViewReleaseNotes_Click(sender, e);
+            return;
+        }
+
+        try
+        {
+            BtnApplyUpdate.IsEnabled = false;
+            BtnApplyUpdate.Content = "Downloading...";
+            ProgressUpdate.Visibility = Visibility.Visible;
+            ProgressUpdate.Value = 0;
+
+            AppendLog($"Downloading update {_latestUpdateInfo.LatestVersion}...");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+            string downloadedExe = await UpdateManager.DownloadUpdateAsync(
+                _latestUpdateInfo.DownloadUrl,
+                percent => Dispatcher.Invoke(() => ProgressUpdate.Value = percent),
+                cts.Token
+            );
+
+            AppendLog("Update downloaded successfully. Restarting into updated version...");
+            UpdateManager.LaunchUpdateAndExit(downloadedExe);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Auto-update download error: {ex.Message}. Opening release page in browser...");
+            BtnViewReleaseNotes_Click(sender, e);
+            BtnApplyUpdate.IsEnabled = true;
+            BtnApplyUpdate.Content = "Download & Update";
+            ProgressUpdate.Visibility = Visibility.Collapsed;
+        }
+    }
+
     private void AppendLog(string message)
     {
         Dispatcher.Invoke(() =>
@@ -569,6 +750,7 @@ public partial class MainWindow : Window
         _isRealExit = true;
         _meterTimer.Stop();
         _discoveryService.Stop();
+        _hotkeyManager?.Dispose();
         _trayManager.Dispose();
         _ = StopSessionAsync();
         Close();

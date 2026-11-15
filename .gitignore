@@ -23,7 +23,9 @@ captures/
 # OS / Misc
 tools/
 dist/
-release/
+release/*.exe
+release/*.pdb
+release/*.zip
 Thumbs.db
 ehthumbs.db
 Desktop.ini

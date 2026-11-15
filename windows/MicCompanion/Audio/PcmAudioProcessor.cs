@@ -5,8 +5,28 @@ public class PcmAudioProcessor
     public float Gain { get; set; } = 1.0f;
     public bool IsMuted { get; set; } = false;
 
+    // Studio Noise Gate
+    public bool NoiseGateEnabled { get; set; } = true;
+    public float NoiseGateThresholdDb { get; set; } = -45.0f; // dBFS
+    public bool IsGateOpen { get; private set; } = false;
+
+    // Gate Envelope State (smoothing gain to avoid clicks)
+    private float _gateGain = 1.0f;
+    private int _gateHoldCounter = 0;
+    private const int GateHoldFrames = 8; // ~160ms hold at 20ms frames
+    private const float GateAttack = 0.4f; // Quick open
+    private const float GateRelease = 0.08f; // Smooth fade out
+
+    // Soft Limiter (Anti-Clip)
+    public bool SoftLimiterEnabled { get; set; } = true;
+
     /// <summary>
-    /// Processes 16-bit PCM samples in-place: applies mute, applies gain, and calculates peak volume (0.0 to 1.0).
+    /// Processes 16-bit PCM samples in-place:
+    /// 1. Applies hardware mute
+    /// 2. Applies digital gain
+    /// 3. Applies studio noise gate (silences background room hum/keyboard clicks)
+    /// 4. Applies soft-knee saturation limiter to prevent digital clipping
+    /// 5. Calculates peak volume (0.0 to 1.0)
     /// </summary>
     public float Process(short[] samples)
     {
@@ -16,29 +36,92 @@ public class PcmAudioProcessor
         if (IsMuted)
         {
             Array.Clear(samples, 0, samples.Length);
+            _gateGain = 0f;
+            IsGateOpen = false;
             return 0f;
         }
 
-        int maxMagnitude = 0;
         float gain = Gain;
+        int maxRawMagnitude = 0;
+
+        // 1. Measure raw peak before gain/gate
+        for (int i = 0; i < samples.Length; i++)
+        {
+            int mag = Math.Abs((int)samples[i]);
+            if (mag > maxRawMagnitude)
+                maxRawMagnitude = mag;
+        }
+
+        float rawPeak = (float)maxRawMagnitude / short.MaxValue;
+        float rawDb = rawPeak > 0.0001f ? 20f * (float)Math.Log10(rawPeak) : -90f;
+
+        // 2. Noise Gate logic with hold & hysteresis
+        if (NoiseGateEnabled)
+        {
+            float threshold = NoiseGateThresholdDb;
+            if (rawDb >= threshold)
+            {
+                IsGateOpen = true;
+                _gateHoldCounter = GateHoldFrames;
+            }
+            else if (_gateHoldCounter > 0)
+            {
+                _gateHoldCounter--;
+                IsGateOpen = true;
+            }
+            else
+            {
+                IsGateOpen = false;
+            }
+
+            // Smooth gate envelope transition
+            float targetGateGain = IsGateOpen ? 1.0f : 0.0f;
+            if (targetGateGain > _gateGain)
+            {
+                _gateGain = Math.Min(1.0f, _gateGain + GateAttack);
+            }
+            else if (targetGateGain < _gateGain)
+            {
+                _gateGain = Math.Max(0.0f, _gateGain - GateRelease);
+            }
+        }
+        else
+        {
+            _gateGain = 1.0f;
+            IsGateOpen = true;
+        }
+
+        // 3. Apply Gain, Gate, and Soft Limiter to samples
+        int maxProcessedMag = 0;
+        float effectiveMultiplier = gain * _gateGain;
 
         for (int i = 0; i < samples.Length; i++)
         {
-            int val = samples[i];
-            if (Math.Abs(gain - 1.0f) > 0.01f)
+            float sampleVal = samples[i] * effectiveMultiplier;
+
+            // 4. Soft-Knee Anti-Clipping Limiter
+            if (SoftLimiterEnabled)
             {
-                val = (int)(val * gain);
-                if (val > short.MaxValue) val = short.MaxValue;
-                else if (val < short.MinValue) val = short.MinValue;
-                samples[i] = (short)val;
+                float absVal = Math.Abs(sampleVal);
+                if (absVal > 28000f) // Start soft compression near ceiling
+                {
+                    float sign = sampleVal >= 0 ? 1f : -1f;
+                    float normalized = absVal / 32768f;
+                    // Tanh compression curves smoothly to 1.0 without hard edges
+                    float compressed = (float)Math.Tanh(normalized * 1.15f) / 1.15f;
+                    sampleVal = sign * compressed * 32767f;
+                }
             }
 
-            int mag = Math.Abs(val);
-            if (mag > maxMagnitude)
-                maxMagnitude = mag;
+            int finalSample = (int)Math.Clamp(sampleVal, short.MinValue, short.MaxValue);
+            samples[i] = (short)finalSample;
+
+            int mag = Math.Abs(finalSample);
+            if (mag > maxProcessedMag)
+                maxProcessedMag = mag;
         }
 
-        return (float)maxMagnitude / short.MaxValue;
+        return (float)maxProcessedMag / short.MaxValue;
     }
 
     /// <summary>
