@@ -1,5 +1,6 @@
 package com.mic.app.util
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -21,8 +22,22 @@ object UpdateChecker {
     private const val REPO_NAME = "EZmic"
     private const val API_URL = "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
 
-    suspend fun check(): AppUpdateInfo? = withContext(Dispatchers.IO) {
+    fun getAppVersion(context: Context? = null): String {
+        if (context != null) {
+            try {
+                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                val vName = pInfo.versionName
+                if (!vName.isNullOrBlank()) {
+                    return if (vName.startsWith("v", ignoreCase = true)) vName else "v$vName"
+                }
+            } catch (_: Exception) {}
+        }
+        return CURRENT_VERSION
+    }
+
+    suspend fun check(context: Context? = null): AppUpdateInfo? = withContext(Dispatchers.IO) {
         try {
+            val appVer = getAppVersion(context)
             val url = URL(API_URL)
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8000
@@ -58,7 +73,7 @@ object UpdateChecker {
                 apkUrl = htmlUrl
             }
 
-            val hasUpdate = isNewer(tagName, CURRENT_VERSION)
+            val hasUpdate = isNewer(tagName, appVer)
 
             AppUpdateInfo(
                 hasUpdate = hasUpdate,
@@ -75,8 +90,10 @@ object UpdateChecker {
 
     private fun isNewer(latest: String, current: String): Boolean {
         if (latest.isBlank()) return false
-        val cleanL = latest.trimStart('v', 'V')
-        val cleanC = current.trimStart('v', 'V')
+        val cleanL = latest.trimStart('v', 'V').trim()
+        val cleanC = current.trimStart('v', 'V').trim()
+        if (cleanL.equals(cleanC, ignoreCase = true)) return false
+
         val partsL = cleanL.split(".").mapNotNull { it.toIntOrNull() }
         val partsC = cleanC.split(".").mapNotNull { it.toIntOrNull() }
         val maxLen = maxOf(partsL.size, partsC.size)

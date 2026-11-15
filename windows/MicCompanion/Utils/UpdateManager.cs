@@ -19,7 +19,15 @@ public class UpdateInfo
 
 public static class UpdateManager
 {
-    public const string CurrentVersion = "v1.1.1";
+    public static string CurrentVersion
+    {
+        get
+        {
+            var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.1";
+        }
+    }
+
     private const string RepoOwner = "FuziwaraDesu67";
     private const string RepoName = "EZmic";
     private const string ApiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest";
@@ -96,15 +104,25 @@ public static class UpdateManager
     {
         if (string.IsNullOrWhiteSpace(latestTag)) return false;
 
-        string cleanLatest = latestTag.TrimStart('v', 'V');
-        string cleanCurrent = currentTag.TrimStart('v', 'V');
+        string cleanLatest = latestTag.TrimStart('v', 'V').Trim();
+        string cleanCurrent = currentTag.TrimStart('v', 'V').Trim();
 
-        if (Version.TryParse(cleanLatest, out var vLatest) && Version.TryParse(cleanCurrent, out var vCurrent))
+        if (string.Equals(cleanLatest, cleanCurrent, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var partsL = cleanLatest.Split('.').Select(p => int.TryParse(p, out var n) ? n : 0).ToList();
+        var partsC = cleanCurrent.Split('.').Select(p => int.TryParse(p, out var n) ? n : 0).ToList();
+        int maxLen = Math.Max(partsL.Count, partsC.Count);
+
+        for (int i = 0; i < maxLen; i++)
         {
-            return vLatest > vCurrent;
+            int numL = i < partsL.Count ? partsL[i] : 0;
+            int numC = i < partsC.Count ? partsC[i] : 0;
+            if (numL > numC) return true;
+            if (numL < numC) return false;
         }
 
-        return string.Compare(cleanLatest, cleanCurrent, StringComparison.OrdinalIgnoreCase) > 0;
+        return false;
     }
 
     public static async Task<string> DownloadUpdateAsync(string downloadUrl, Action<int>? progressCallback, CancellationToken token)
@@ -141,6 +159,28 @@ public static class UpdateManager
     {
         try
         {
+            string currentExe = Environment.ProcessPath ?? "";
+            if (!string.IsNullOrEmpty(currentExe) && File.Exists(currentExe))
+            {
+                string scriptPath = Path.Combine(Path.GetTempPath(), "ezmic_replace_and_restart.bat");
+                string script = $@"@echo off
+timeout /t 1 /nobreak >nul
+copy /y ""{updateExePath}"" ""{currentExe}"" >nul
+start """" ""{currentExe}""
+del ""{updateExePath}"" >nul 2>&1
+(goto) 2>nul & del ""%~f0""
+";
+                File.WriteAllText(scriptPath, script);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = scriptPath,
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+                Environment.Exit(0);
+                return;
+            }
+
             Process.Start(new ProcessStartInfo
             {
                 FileName = updateExePath,
@@ -148,6 +188,10 @@ public static class UpdateManager
             });
             Environment.Exit(0);
         }
-        catch { }
+        catch
+        {
+            Process.Start(new ProcessStartInfo { FileName = updateExePath, UseShellExecute = true });
+            Environment.Exit(0);
+        }
     }
 }

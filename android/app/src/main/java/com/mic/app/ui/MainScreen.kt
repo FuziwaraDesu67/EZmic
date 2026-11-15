@@ -114,7 +114,7 @@ fun MainScreen(
 
     // Auto-check for updates on launch
     LaunchedEffect(Unit) {
-        val info = UpdateChecker.check()
+        val info = UpdateChecker.check(context)
         if (info != null && info.hasUpdate) {
             updateInfo = info
             showUpdateDialog = true
@@ -728,7 +728,7 @@ fun MainScreen(
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
                     Text(
-                        text = "EZmic v1.1.1",
+                        text = "EZmic ${UpdateChecker.getAppVersion(context)}",
                         fontSize = 11.sp,
                         color = TextMuted
                     )
@@ -745,7 +745,7 @@ fun MainScreen(
                         modifier = Modifier.clickable(enabled = !isCheckingUpdate) {
                             isCheckingUpdate = true
                             coroutineScope.launch {
-                                val info = UpdateChecker.check()
+                                val info = UpdateChecker.check(context)
                                 isCheckingUpdate = false
                                 if (info != null) {
                                     updateInfo = info
