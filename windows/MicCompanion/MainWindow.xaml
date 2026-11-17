@@ -436,9 +436,26 @@
                     </StackPanel>
                 </Button>
 
+                <!-- Buy Me A Coffee Support Link -->
+                <Button x:Name="BtnBuyCoffee" Grid.Column="1" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnBuyCoffee_Click" ToolTip="Support development on Buy Me a Coffee (buymeacoffee.com/eaadarsh)">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="☕" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Buy me a coffee" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B" TextDecorations="Underline"/>
+                    </StackPanel>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Opacity" Value="0.8"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <!-- Check for Updates Action & Version Badge -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.1" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.2" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                     <Button x:Name="BtnCheckUpdates" Content="Check for updates" Background="Transparent" Foreground="#8B949E" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnCheckUpdates_Click">
                         <Button.Style>
                             <Style TargetType="Button">

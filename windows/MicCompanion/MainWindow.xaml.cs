@@ -613,6 +613,18 @@ public partial class MainWindow : Window
         }
     }
 
+    private void BtnBuyCoffee_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://buymeacoffee.com/eaadarsh") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Unable to open browser: {ex.Message}");
+        }
+    }
+
     private async void BtnCheckUpdates_Click(object sender, RoutedEventArgs e)
     {
         BtnCheckUpdates.IsEnabled = false;

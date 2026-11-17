@@ -5,9 +5,15 @@
 # EZmic 🎙️⚡
 
 > **Turn your Android smartphone into a high-fidelity, ultra-low latency microphone for your Windows PC over Wi-Fi, USB, or Bluetooth.**  
-> *Created with ❤️ by [@FuziwaraDesu67](https://github.com/FuziwaraDesu67)*
+> *Created with ❤️ by [@FuziwaraDesu67](https://github.com/FuziwaraDesu67) • [☕ Buy me a coffee](https://buymeacoffee.com/eaadarsh)*
 
 Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, and **Steam Games** with zero complex setup.
+
+<p align="center">
+  <a href="https://buymeacoffee.com/eaadarsh" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="42" />
+  </a>
+</p>
 
 ---
 
@@ -43,13 +49,13 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ### Step 1: Download the Files
 Grab the latest release from the **[Releases Page](https://github.com/FuziwaraDesu67/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.1.1-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.1/EZmic-v1.1.1-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.1.1.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.1/EZmic-v1.1.1.apk) *(Native app, high quality)*
+- 💻 **Windows PC**: [**Download EZmic-v1.1.2-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.2/EZmic-v1.1.2-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.2.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.2/EZmic-v1.1.2.apk) *(Native app, high quality)*
 
 *(All versions available on the **[Releases](https://github.com/FuziwaraDesu67/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
-1. Double-click `EZmic-v1.1.1-win64.exe` on your PC.
+1. Double-click `EZmic-v1.1.2-win64.exe` on your PC.
 2. If you don't already have a virtual audio cable, the app will show a yellow banner:  
    👉 Click **"Install Free Cable"** (it downloads and installs VB-Audio Cable automatically in 10 seconds).
 3. Select your desired connection mode (**Wi-Fi**, **USB**, or **Bluetooth**) and click **Start receiver**.
@@ -137,6 +143,16 @@ cd android
 ./gradlew assembleDebug
 # APK is generated at: app/build/outputs/apk/debug/app-debug.apk
 ```
+
+---
+
+## ☕ Support & Donations
+
+If EZmic has been useful to you, you can support further development by buying a coffee:
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/eaadarsh)
+
+Direct link: **[buymeacoffee.com/eaadarsh](https://buymeacoffee.com/eaadarsh)**
 
 ---
 
