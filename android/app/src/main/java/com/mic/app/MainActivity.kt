@@ -79,20 +79,20 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     state = state,
                     pairedDevices = pairedDevices,
-                    onStartWifi = { ip, port, useOpus, ns, aec ->
+                    onStartWifi = { ip, port, useOpus, ns, aec, isStereo ->
                         ensureServiceStarted()
                         val transmitter = WifiTransmitter(targetIp = ip, targetPort = port)
-                        micService?.startStreaming(transmitter, useOpus, ns, aec)
+                        micService?.startStreaming(transmitter, useOpus, ns, aec, isStereo)
                     },
-                    onStartUsb = { port, useOpus, ns, aec ->
+                    onStartUsb = { port, useOpus, ns, aec, isStereo ->
                         ensureServiceStarted()
                         val transmitter = UsbTransmitter(port = port)
-                        micService?.startStreaming(transmitter, useOpus, ns, aec)
+                        micService?.startStreaming(transmitter, useOpus, ns, aec, isStereo)
                     },
-                    onStartBluetooth = { device, useOpus, ns, aec ->
+                    onStartBluetooth = { device, useOpus, ns, aec, isStereo ->
                         ensureServiceStarted()
                         val transmitter = BluetoothTransmitter(targetDevice = device)
-                        micService?.startStreaming(transmitter, useOpus, ns, aec)
+                        micService?.startStreaming(transmitter, useOpus, ns, aec, isStereo)
                     },
                     onStop = {
                         micService?.stopStreaming()

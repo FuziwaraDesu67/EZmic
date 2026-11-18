@@ -12,6 +12,7 @@ using Rectangle = System.Windows.Shapes.Rectangle;
 using Canvas = System.Windows.Controls.Canvas;
 using Button = System.Windows.Controls.Button;
 using ProgressBar = System.Windows.Controls.ProgressBar;
+using SelectionChangedEventArgs = System.Windows.Controls.SelectionChangedEventArgs;
 using Clipboard = System.Windows.Clipboard;
 using MicCompanion.Audio;
 using MicCompanion.Transports;
@@ -599,6 +600,62 @@ public partial class MainWindow : Window
         bool enabled = ChkSidetone.IsChecked == true;
         _audioManager.IsMonitorEnabled = enabled;
         AppendLog(enabled ? "Mic monitor (sidetone) enabled in headphones." : "Mic monitor disabled.");
+    }
+
+    private void CmbStudioProfile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_audioManager == null || CmbStudioProfile == null || BadgeDspStatus == null || TxtProfileDescription == null)
+            return;
+
+        switch (CmbStudioProfile.SelectedIndex)
+        {
+            case 0: // Broadcast Warmth (Shure SM7B Curve)
+                _audioManager.Processor.Profile = StudioProfile.BroadcastWarmth;
+                BadgeDspStatus.Text = "SHURE SM7B";
+                BadgeDspStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x10, 0xB9, 0x81));
+                TxtProfileDescription.Text = "Deep chest warmth (+4dB @ 140Hz), boxy mud cut & radio compression.";
+                AppendLog("Studio mic profile applied: Broadcast Warmth (Shure SM7B)");
+                break;
+
+            case 1: // Crisp Esports (Discord & Gaming Callouts)
+                _audioManager.Processor.Profile = StudioProfile.CrispEsports;
+                BadgeDspStatus.Text = "DISCORD ESPORTS";
+                BadgeDspStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xA2, 0xFF));
+                TxtProfileDescription.Text = "High-clarity presence boost (+5dB @ 3.2kHz), cuts through game explosions.";
+                AppendLog("Studio mic profile applied: Crisp Esports (Discord / Gaming)");
+                break;
+
+            case 2: // Podcast Studio (Rode PodMic Balanced)
+                _audioManager.Processor.Profile = StudioProfile.PodcastStudio;
+                BadgeDspStatus.Text = "RODE PODMIC";
+                BadgeDspStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xF5, 0x9E, 0x0B));
+                TxtProfileDescription.Text = "Balanced vocal presence, de-essing & smooth leveling.";
+                AppendLog("Studio mic profile applied: Podcast Studio (Rode PodMic)");
+                break;
+
+            case 3: // Natural (Clean 48kHz Bypass)
+            default:
+                _audioManager.Processor.Profile = StudioProfile.Natural;
+                BadgeDspStatus.Text = "BYPASS";
+                BadgeDspStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x8B, 0x94, 0x9E));
+                TxtProfileDescription.Text = "Pure uncolored 48kHz transparent audio.";
+                AppendLog("Studio mic profile: Natural (Clean Bypass)");
+                break;
+        }
+    }
+
+    private void ChkCompressor_Click(object sender, RoutedEventArgs e)
+    {
+        bool isEnabled = ChkCompressor.IsChecked == true;
+        _audioManager.Processor.CompressorEnabled = isEnabled;
+        AppendLog($"Broadcast dynamic compressor {(isEnabled ? "enabled" : "disabled")}.");
+    }
+
+    private void ChkDeEsser_Click(object sender, RoutedEventArgs e)
+    {
+        bool isEnabled = ChkDeEsser.IsChecked == true;
+        _audioManager.Processor.DeEsserEnabled = isEnabled;
+        AppendLog($"Studio de-esser {(isEnabled ? "enabled" : "disabled")}.");
     }
 
     private void BtnAuthorProfile_Click(object sender, RoutedEventArgs e)

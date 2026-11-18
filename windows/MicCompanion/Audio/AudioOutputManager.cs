@@ -199,8 +199,10 @@ public class AudioOutputManager : IDisposable
             float peak = _processor.Process(samples);
             LevelChanged?.Invoke(peak);
 
-            // Convert mono to 2-channel stereo byte array
-            byte[] stereoBytes = PcmAudioProcessor.ToStereoByteArray(samples);
+            // Convert to 2-channel stereo byte array
+            byte[] stereoBytes = packet.IsStereo
+                ? PcmAudioProcessor.ToByteArray(samples)
+                : PcmAudioProcessor.ToStereoByteArray(samples);
 
             lock (_audioLock)
             {

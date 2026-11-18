@@ -24,7 +24,7 @@ public static class UpdateManager
         get
         {
             var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.2";
+            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.3";
         }
     }
 

@@ -68,7 +68,7 @@ class MicForegroundService : Service() {
         }
     }
 
-    fun startStreaming(transmitter: IAudioTransmitter, useOpus: Boolean = true, noiseSuppression: Boolean = true, echoCancellation: Boolean = true) {
+    fun startStreaming(transmitter: IAudioTransmitter, useOpus: Boolean = true, noiseSuppression: Boolean = true, echoCancellation: Boolean = true, isStereo: Boolean = false) {
         activeTransmitter = transmitter
 
         val notification = buildNotification("Connecting...")
@@ -103,6 +103,7 @@ class MicForegroundService : Service() {
                         _streamingState.value = _streamingState.value.copy(audioLevel = level)
                     }
                 ).apply {
+                    this.isStereoMode = isStereo
                     this.enableNoiseSuppression = noiseSuppression
                     this.enableEchoCancellation = echoCancellation
                     start()

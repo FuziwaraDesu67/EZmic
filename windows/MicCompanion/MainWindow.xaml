@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="EZmic" 
         Icon="Assets/icon.png"
-        Height="760" Width="480"
-        MinHeight="680" MinWidth="440"
+        Height="820" Width="480"
+        MinHeight="720" MinWidth="440"
         WindowStartupLocation="CenterScreen"
         Background="#0D0E12" Foreground="#E6EDF3">
 
@@ -390,6 +390,33 @@
                         <CheckBox x:Name="ChkSidetone" Content="Listen to mic" FontSize="11" Foreground="{StaticResource TextSecondary}" Click="ChkSidetone_Click" ToolTip="Hear yourself in headphones to check volume"/>
                     </StackPanel>
                 </Grid>
+
+                <Separator Background="{StaticResource BorderHairline}" Margin="0,10,0,10"/>
+
+                <!-- Studio Voice Enhancer (Pro Broadcast Voice DSP) -->
+                <StackPanel>
+                    <Grid Margin="0,0,0,6">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Studio voice enhancer" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
+                            <Border Background="#1A2D23" BorderBrush="#10B981" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="8,0,0,0">
+                                <TextBlock x:Name="BadgeDspStatus" Text="SHURE SM7B" FontSize="9" FontWeight="Bold" Foreground="#10B981"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <CheckBox x:Name="ChkCompressor" Content="Compressor" IsChecked="True" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,10,0" Click="ChkCompressor_Click" ToolTip="Broadcast dynamic compression (voice leveling)"/>
+                            <CheckBox x:Name="ChkDeEsser" Content="De-Esser" IsChecked="True" FontSize="10" Foreground="{StaticResource TextSecondary}" Click="ChkDeEsser_Click" ToolTip="Tames harsh 'S' and 'Sh' sibilance"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <ComboBox x:Name="CmbStudioProfile" Height="30" SelectionChanged="CmbStudioProfile_SelectionChanged">
+                        <ComboBoxItem Content="🎙️ Broadcast Warmth (Shure SM7B Curve)" IsSelected="True"/>
+                        <ComboBoxItem Content="⚡ Crisp Esports (Discord &amp; Gaming Callouts)"/>
+                        <ComboBoxItem Content="🎙️ Podcast Studio (Rode PodMic Balanced)"/>
+                        <ComboBoxItem Content="🎚️ Natural (Clean 48kHz Bypass)"/>
+                    </ComboBox>
+
+                    <TextBlock x:Name="TxtProfileDescription" Text="Deep chest warmth (+4dB @ 140Hz), boxy mud cut &amp; radio compression." FontSize="10" Foreground="{StaticResource TextMuted}" Margin="2,4,0,0"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
@@ -455,7 +482,7 @@
 
                 <!-- Check for Updates Action & Version Badge -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.2" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.3" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                     <Button x:Name="BtnCheckUpdates" Content="Check for updates" Background="Transparent" Foreground="#8B949E" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnCheckUpdates_Click">
                         <Button.Style>
                             <Style TargetType="Button">

@@ -26,25 +26,31 @@ class AudioCaptureManager(
     var isMuted: Boolean = false
     var enableNoiseSuppression: Boolean = true
     var enableEchoCancellation: Boolean = true
+    var isStereoMode: Boolean = false
 
     @SuppressLint("MissingPermission")
     fun start() {
         if (isRecording) return
 
+        val channelConfig = if (isStereoMode) AudioFormat.CHANNEL_IN_STEREO else AudioFormat.CHANNEL_IN_MONO
+        val audioSource = if (isStereoMode) MediaRecorder.AudioSource.MIC else MediaRecorder.AudioSource.VOICE_RECOGNITION
+
         val minBufferSize = AudioRecord.getMinBufferSize(
             PacketConstants.SAMPLE_RATE,
-            AudioFormat.CHANNEL_IN_MONO,
+            channelConfig,
             AudioFormat.ENCODING_PCM_16BIT
         )
 
-        val bufferSize = max(minBufferSize, PacketConstants.SAMPLES_PER_FRAME * 4)
+        val channelCount = if (isStereoMode) 2 else 1
+        val samplesPerFrame = PacketConstants.SAMPLES_PER_FRAME * channelCount
+        val bufferSize = max(minBufferSize, samplesPerFrame * 4)
 
         // Use VOICE_RECOGNITION for clean, studio-quality microphone capture without
         // destructive cellular phone-call DSP / phase distortion on Samsung devices.
         val record = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            audioSource,
             PacketConstants.SAMPLE_RATE,
-            AudioFormat.CHANNEL_IN_MONO,
+            channelConfig,
             AudioFormat.ENCODING_PCM_16BIT,
             bufferSize
         )
@@ -71,13 +77,15 @@ class AudioCaptureManager(
 
     private fun recordLoop() {
         val record = audioRecord ?: return
-        val pcmBuffer = ShortArray(PacketConstants.SAMPLES_PER_FRAME)
+        val channelCount = if (isStereoMode) 2 else 1
+        val samplesPerFrame = PacketConstants.SAMPLES_PER_FRAME * channelCount
+        val pcmBuffer = ShortArray(samplesPerFrame)
 
         while (isRecording) {
-            // Read exact full frame of 960 samples (20ms at 48kHz) to eliminate audio tearing
+            // Read exact full frame to eliminate audio tearing
             var totalRead = 0
-            while (totalRead < PacketConstants.SAMPLES_PER_FRAME && isRecording) {
-                val read = record.read(pcmBuffer, totalRead, PacketConstants.SAMPLES_PER_FRAME - totalRead)
+            while (totalRead < samplesPerFrame && isRecording) {
+                val read = record.read(pcmBuffer, totalRead, samplesPerFrame - totalRead)
                 if (read > 0) {
                     totalRead += read
                 } else if (read < 0) {
@@ -85,7 +93,7 @@ class AudioCaptureManager(
                 }
             }
 
-            if (totalRead < PacketConstants.SAMPLES_PER_FRAME) continue
+            if (totalRead < samplesPerFrame) continue
 
             // 1. Calculate Peak Level & Apply Gain / Mute
             var maxMagnitude = 0
@@ -122,6 +130,9 @@ class AudioCaptureManager(
                 var flags: Byte = 0
                 if (isMuted) {
                     flags = (flags.toInt() or PacketConstants.FLAG_MUTED.toInt()).toByte()
+                }
+                if (isStereoMode) {
+                    flags = (flags.toInt() or PacketConstants.FLAG_STEREO.toInt()).toByte()
                 }
 
                 val packet = AudioPacket(

@@ -51,9 +51,9 @@ enum class TransportMode {
 fun MainScreen(
     state: StreamingState,
     pairedDevices: List<BluetoothDevice>,
-    onStartWifi: (ip: String, port: Int, useOpus: Boolean, ns: Boolean, aec: Boolean) -> Unit,
-    onStartUsb: (port: Int, useOpus: Boolean, ns: Boolean, aec: Boolean) -> Unit,
-    onStartBluetooth: (device: BluetoothDevice, useOpus: Boolean, ns: Boolean, aec: Boolean) -> Unit,
+    onStartWifi: (ip: String, port: Int, useOpus: Boolean, ns: Boolean, aec: Boolean, isStereo: Boolean) -> Unit,
+    onStartUsb: (port: Int, useOpus: Boolean, ns: Boolean, aec: Boolean, isStereo: Boolean) -> Unit,
+    onStartBluetooth: (device: BluetoothDevice, useOpus: Boolean, ns: Boolean, aec: Boolean, isStereo: Boolean) -> Unit,
     onStop: () -> Unit,
     onToggleMute: (Boolean) -> Unit,
     onGainChanged: (Float) -> Unit,
@@ -80,6 +80,7 @@ fun MainScreen(
     }
     var enableNs by remember { mutableStateOf(prefs.getBoolean("enable_ns", true)) }
     var enableAec by remember { mutableStateOf(prefs.getBoolean("enable_aec", true)) }
+    var isStereoMode by remember { mutableStateOf(prefs.getBoolean("is_stereo_mode", false)) }
     var gainSlider by remember { mutableFloatStateOf(prefs.getFloat("gain_slider", 100f)) }
     var showSwitchDialog by remember { mutableStateOf(false) }
     var pendingMode by remember { mutableStateOf<TransportMode?>(null) }
@@ -107,6 +108,9 @@ fun MainScreen(
     }
     LaunchedEffect(enableAec) {
         prefs.edit().putBoolean("enable_aec", enableAec).apply()
+    }
+    LaunchedEffect(isStereoMode) {
+        prefs.edit().putBoolean("is_stereo_mode", isStereoMode).apply()
     }
     LaunchedEffect(gainSlider) {
         prefs.edit().putFloat("gain_slider", gainSlider).apply()
@@ -572,6 +576,69 @@ fun MainScreen(
                         )
                     }
 
+                    // True Stereo Mode Toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(enabled = state.isStreaming) {
+                                Toast.makeText(context, "Channel mode is locked while broadcasting.", Toast.LENGTH_SHORT).show()
+                            }
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (isStereoMode) "Stereo (Music/ASMR)" else "Voice Mode (Dual-Mono)",
+                                    fontSize = 13.sp,
+                                    color = if (state.isStreaming) TextMuted else TextPrimary
+                                )
+                                if (state.isStreaming) {
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("🔒", fontSize = 11.sp)
+                                }
+                            }
+                            Text(
+                                text = if (isStereoMode) "Dual-mic wide recording (Landscape)" else "Focused speech for Discord & Gaming",
+                                fontSize = 11.sp,
+                                color = TextMuted
+                            )
+                        }
+                        Switch(
+                            checked = isStereoMode,
+                            onCheckedChange = { if (!state.isStreaming) isStereoMode = it },
+                            enabled = !state.isStreaming,
+                            colors = SwitchDefaults.colors(
+                                disabledCheckedThumbColor = StudioGreen.copy(alpha = 0.6f),
+                                disabledCheckedTrackColor = StudioGreen.copy(alpha = 0.25f),
+                                disabledUncheckedThumbColor = Color(0xFF6B7280).copy(alpha = 0.4f),
+                                disabledUncheckedTrackColor = Color(0xFF374151).copy(alpha = 0.2f)
+                            )
+                        )
+                    }
+
+                    // Studio Quality Information Banner
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF0D1117))
+                            .border(1.dp, Color(0xFF1F2937), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🎙️", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("PC Studio Enhancer Ready", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StudioGreen)
+                                Text("Real-time Shure SM7B broadcast warmth & compression on PC.", fontSize = 10.sp, color = TextSecondary)
+                            }
+                        }
+                    }
+
                     if (state.isStreaming) {
                         Text(
                             text = "🔒 Hardware DSP filters are locked while broadcast is on air.",
@@ -630,12 +697,12 @@ fun MainScreen(
                             onStop()
                         } else {
                             when (selectedMode) {
-                                TransportMode.WIFI -> onStartWifi(wifiIp, wifiPort.toIntOrNull() ?: 49152, true, enableNs, enableAec)
-                                TransportMode.USB -> onStartUsb(usbPort.toIntOrNull() ?: 49153, true, enableNs, enableAec)
+                                TransportMode.WIFI -> onStartWifi(wifiIp, wifiPort.toIntOrNull() ?: 49152, true, enableNs, enableAec, isStereoMode)
+                                TransportMode.USB -> onStartUsb(usbPort.toIntOrNull() ?: 49153, true, enableNs, enableAec, isStereoMode)
                                 TransportMode.BLUETOOTH -> {
                                     val dev = selectedDevice
                                     if (dev != null) {
-                                        onStartBluetooth(dev, true, enableNs, enableAec)
+                                        onStartBluetooth(dev, true, enableNs, enableAec, isStereoMode)
                                     } else {
                                         Toast.makeText(context, "Select your paired PC first", Toast.LENGTH_SHORT).show()
                                     }

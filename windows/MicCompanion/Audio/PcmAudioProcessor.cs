@@ -20,6 +20,27 @@ public class PcmAudioProcessor
     // Soft Limiter (Anti-Clip)
     public bool SoftLimiterEnabled { get; set; } = true;
 
+    // Studio Voice Enhancer (EQ Profiles, Broadcast Compressor, De-Esser)
+    public StudioDspChain DspChain { get; } = new();
+
+    public StudioProfile Profile
+    {
+        get => DspChain.Profile;
+        set => DspChain.Profile = value;
+    }
+
+    public bool CompressorEnabled
+    {
+        get => DspChain.CompressorEnabled;
+        set => DspChain.CompressorEnabled = value;
+    }
+
+    public bool DeEsserEnabled
+    {
+        get => DspChain.DeEsserEnabled;
+        set => DspChain.DeEsserEnabled = value;
+    }
+
     /// <summary>
     /// Processes 16-bit PCM samples in-place:
     /// 1. Applies hardware mute
@@ -91,7 +112,13 @@ public class PcmAudioProcessor
             IsGateOpen = true;
         }
 
-        // 3. Apply Gain, Gate, and Soft Limiter to samples
+        // 3. Apply Studio Mic Voice Enhancer (EQ, Compressor, De-Esser)
+        if (_gateGain > 0.05f)
+        {
+            DspChain.Process(samples);
+        }
+
+        // 4. Apply Gain, Gate, and Soft Limiter to samples
         int maxProcessedMag = 0;
         float effectiveMultiplier = gain * _gateGain;
 
