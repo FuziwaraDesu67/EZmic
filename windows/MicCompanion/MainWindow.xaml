@@ -282,7 +282,7 @@
             </StackPanel>
         </Border>
 
-        <!-- 1. Header with Live Tally Pill -->
+        <!-- 1. Header with Live Tally Pill & Buy Me a Coffee -->
         <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -294,13 +294,37 @@
                 <TextBlock Text="Studio microphone bridge" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
             </StackPanel>
 
-            <!-- Authentic Broadcast Tally -->
-            <Border Grid.Column="1" x:Name="BorderTally" Background="#14181E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="10,5" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse x:Name="DotTally" Width="7" Height="7" Fill="{StaticResource TextMuted}" Margin="0,0,7,0"/>
-                    <TextBlock x:Name="TxtTally" Text="STANDBY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                </StackPanel>
-            </Border>
+            <!-- Top Right Action Controls -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Buy Me A Coffee Support Pill Button -->
+                <Button x:Name="BtnBuyCoffee" Margin="0,0,8,0" Padding="10,5" Cursor="Hand" Click="BtnBuyCoffee_Click" ToolTip="Support development on Buy Me a Coffee (buymeacoffee.com/eaadarsh)">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Brd" Background="#1A1812" BorderBrush="#854D0E" BorderThickness="1" CornerRadius="12" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Brd" Property="Background" Value="#2D2013"/>
+                                    <Setter TargetName="Brd" Property="BorderBrush" Value="#F59E0B"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="☕" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Buy me a coffee" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Authentic Broadcast Tally -->
+                <Border x:Name="BorderTally" Background="#14181E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="10,5" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse x:Name="DotTally" Width="7" Height="7" Fill="{StaticResource TextMuted}" Margin="0,0,7,0"/>
+                        <TextBlock x:Name="TxtTally" Text="STANDBY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
 
         <!-- 2. Connection Transport Selector (Liquid Glass Dock Slider) -->
@@ -592,23 +616,6 @@
                         <TextBlock Text="Created by " FontSize="11" Foreground="{StaticResource TextMuted}"/>
                         <TextBlock Text="FuziwaraDesu67" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" TextDecorations="Underline"/>
                     </StackPanel>
-                </Button>
-
-                <!-- Buy Me A Coffee Support Link -->
-                <Button x:Name="BtnBuyCoffee" Grid.Column="1" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnBuyCoffee_Click" ToolTip="Support development on Buy Me a Coffee (buymeacoffee.com/eaadarsh)">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="☕" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Buy me a coffee" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B" TextDecorations="Underline"/>
-                    </StackPanel>
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
                 </Button>
 
                 <!-- Check for Updates Action & Version Badge -->
