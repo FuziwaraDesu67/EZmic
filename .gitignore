@@ -33,3 +33,9 @@ $RECYCLE.BIN/
 *.log
 .system_generated/
 *.tmp
+
+node_modules/
+promo/node_modules/
+promo/package*.json
+frames/
+
