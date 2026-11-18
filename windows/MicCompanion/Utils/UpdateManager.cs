@@ -160,14 +160,44 @@ public static class UpdateManager
         try
         {
             string currentExe = Environment.ProcessPath ?? "";
+            int currentPid = Process.GetCurrentProcess().Id;
             if (!string.IsNullOrEmpty(currentExe) && File.Exists(currentExe))
             {
                 string scriptPath = Path.Combine(Path.GetTempPath(), "ezmic_replace_and_restart.bat");
                 string script = $@"@echo off
+set ""SRC={updateExePath}""
+set ""DST={currentExe}""
+set ""PID={currentPid}""
+
+:: 1. Wait for current process PID to completely terminate
+set /a p_wait=0
+:wait_proc
 timeout /t 1 /nobreak >nul
-copy /y ""{updateExePath}"" ""{currentExe}"" >nul
-start """" ""{currentExe}""
-del ""{updateExePath}"" >nul 2>&1
+tasklist /fi ""pid eq %PID%"" 2>nul | findstr /i ""%PID%"" >nul
+if not errorlevel 1 (
+    set /a p_wait+=1
+    if %p_wait% lss 8 goto wait_proc
+)
+
+:: 2. Retry file replacement up to 10 times to overcome Windows single-file lock
+set /a c_wait=0
+:retry_copy
+copy /y ""%SRC%"" ""%DST%"" >nul 2>&1
+if not errorlevel 1 goto copy_done
+set /a c_wait+=1
+if %c_wait% lss 10 (
+    timeout /t 1 /nobreak >nul
+    goto retry_copy
+)
+
+:: 3. Fallback: if DST is protected or cannot be written, launch the newly downloaded binary directly
+start """" ""%SRC%""
+exit /b
+
+:copy_done
+start """" ""%DST%""
+timeout /t 1 /nobreak >nul
+del ""%SRC%"" >nul 2>&1
 (goto) 2>nul & del ""%~f0""
 ";
                 File.WriteAllText(scriptPath, script);

@@ -703,9 +703,10 @@ public partial class MainWindow : Window
                 Dispatcher.Invoke(() =>
                 {
                     TxtUpdateTitle.Text = $"🎉 New update available: {update.LatestVersion}";
-                    string notes = update.ReleaseNotes;
-                    if (notes.Length > 120) notes = notes[..117] + "...";
-                    TxtUpdateNotes.Text = string.IsNullOrWhiteSpace(notes) ? "New stability, audio quality & low-latency improvements." : notes;
+                    string cleanNotes = System.Text.RegularExpressions.Regex.Replace(update.ReleaseNotes ?? "", @"[#*`]", "").Trim();
+                    cleanNotes = string.Join(" • ", cleanNotes.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)));
+                    if (cleanNotes.Length > 110) cleanNotes = cleanNotes[..107] + "...";
+                    TxtUpdateNotes.Text = string.IsNullOrWhiteSpace(cleanNotes) ? "New studio icon, UI refresh & audio improvements." : cleanNotes;
                     BorderUpdateBanner.Visibility = Visibility.Visible;
                 });
 

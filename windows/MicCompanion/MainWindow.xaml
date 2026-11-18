@@ -3,12 +3,36 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="EZmic" 
         Icon="Assets/icon.png"
-        Height="820" Width="480"
-        MinHeight="720" MinWidth="440"
+        Height="740" Width="490"
+        MinHeight="560" MinWidth="440"
         WindowStartupLocation="CenterScreen"
         Background="#0D0E12" Foreground="#E6EDF3">
 
     <Window.Resources>
+        <!-- Minimalist Dark ScrollBar Style -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="Transparent">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#2D3342" CornerRadius="3" Margin="1,0"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <!-- Typography & Shared Hardware Palette -->
         <SolidColorBrush x:Key="ChassisBg" Color="#0D0E12"/>
         <SolidColorBrush x:Key="PanelBg" Color="#14161C"/>
@@ -240,18 +264,19 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="18">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- 0: Dynamic Update Banner -->
-            <RowDefinition Height="Auto"/> <!-- 1: Header & Tally -->
-            <RowDefinition Height="Auto"/> <!-- 2: Transport Liquid Dock & LAN IP -->
-            <RowDefinition Height="Auto"/> <!-- 3: Audio Endpoint -->
-            <RowDefinition Height="Auto"/> <!-- 4: Precision LED Meter -->
-            <RowDefinition Height="Auto"/> <!-- 5: Gain, Noise Gate & Sidetone Controls -->
-            <RowDefinition Height="*"/>    <!-- 6: Compact Activity Log -->
-            <RowDefinition Height="Auto"/> <!-- 7: Footer Options -->
-            <RowDefinition Height="Auto"/> <!-- 8: GitHub Profile Attribution -->
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+        <Grid Margin="18,14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- 0: Dynamic Update Banner -->
+                <RowDefinition Height="Auto"/> <!-- 1: Header & Tally -->
+                <RowDefinition Height="Auto"/> <!-- 2: Transport Liquid Dock & LAN IP -->
+                <RowDefinition Height="Auto"/> <!-- 3: Audio Endpoint -->
+                <RowDefinition Height="Auto"/> <!-- 4: Precision LED Meter -->
+                <RowDefinition Height="Auto"/> <!-- 5: Gain, Noise Gate & Sidetone Controls -->
+                <RowDefinition Height="Auto"/> <!-- 6: Compact Activity Log -->
+                <RowDefinition Height="Auto"/> <!-- 7: Footer Options -->
+                <RowDefinition Height="Auto"/> <!-- 8: GitHub Profile Attribution -->
+            </Grid.RowDefinitions>
 
         <!-- 0. Dynamic Update Notification Pop-up Banner -->
         <Border x:Name="BorderUpdateBanner" Grid.Row="0" Background="#14231E" BorderBrush="#10B981" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
@@ -576,7 +601,7 @@
         </Border>
 
         <!-- 6. Compact Terminal Log -->
-        <Border Grid.Row="6" Background="#090A0E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+        <Border Grid.Row="6" Height="90" Background="#090A0E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
             <DockPanel>
                 <TextBlock Text="Activity" DockPanel.Dock="Top" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}" Margin="0,0,0,4"/>
                 <ScrollViewer x:Name="ScrollLog" VerticalScrollBarVisibility="Auto">
@@ -636,4 +661,5 @@
             </Grid>
         </Border>
     </Grid>
+    </ScrollViewer>
 </Window>
