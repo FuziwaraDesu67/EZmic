@@ -17,7 +17,7 @@ data class AppUpdateInfo(
 )
 
 object UpdateChecker {
-    const val CURRENT_VERSION = "v1.1.3"
+    const val CURRENT_VERSION = "v1.1.4"
     private const val REPO_OWNER = "FuziwaraDesu67"
     private const val REPO_NAME = "EZmic"
     private const val API_URL = "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
