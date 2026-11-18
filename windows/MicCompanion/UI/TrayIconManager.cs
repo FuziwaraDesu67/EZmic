@@ -34,10 +34,18 @@ public class TrayIconManager : IDisposable
         Icon trayIcon = SystemIcons.Application;
         try
         {
-            string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "app.ico");
-            if (System.IO.File.Exists(icoPath))
+            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
+            if (!string.IsNullOrEmpty(exePath) && System.IO.File.Exists(exePath))
             {
-                trayIcon = new Icon(icoPath);
+                trayIcon = Icon.ExtractAssociatedIcon(exePath) ?? trayIcon;
+            }
+            else
+            {
+                string icoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "app.ico");
+                if (System.IO.File.Exists(icoPath))
+                {
+                    trayIcon = new Icon(icoPath);
+                }
             }
         }
         catch { }
