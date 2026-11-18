@@ -101,7 +101,8 @@ html, body {
 .display-title.lg { font-size: 86px; }
 .display-title.md { font-size: 64px; }
 
-.word { display: inline-block; white-space: nowrap; }
+.word { display: inline-block; white-space: nowrap; margin-right: 0.26em; }
+.word:last-child { margin-right: 0; }
 .char { display: inline-block; will-change: transform, opacity, filter; }
 
 /* Highlight Badge / Pill */
@@ -144,7 +145,7 @@ html, body {
 
 /* Hardware Studio Rack Card */
 .studio-card {
-  position: absolute;
+  position: relative;
   background: rgba(18, 22, 30, 0.85);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -276,7 +277,7 @@ html, body {
       <div class="display-title xl">
         <span class="word">Your</span> <span class="word">PC</span> <span class="word">mic</span><br>
         <span class="word">sounds</span> <span class="word">like...</span>
-        <span class="hl-amber word">a tin can?</span>
+        <span class="hl-amber"><span class="word">a</span> <span class="word">tin</span> <span class="word">can?</span></span>
       </div>
       <div class="sub-caption">Muffled noise · Boxy room echo · Keyboard clatter</div>
       
@@ -320,7 +321,7 @@ html, body {
         </div>
         <div class="display-title lg" style="text-align: left; margin-top: 24px;">
           <span class="word">Your</span> <span class="word">phone</span> <span class="word">is</span> <span class="word">already</span><br>
-          <span class="word">a</span> <span class="hl-pill word">studio condenser.</span>
+          <span class="word">a</span> <span class="hl-pill"><span class="word">studio</span> <span class="word">condenser.</span></span>
         </div>
         <div class="sub-caption" style="text-align: left; max-width: 680px;">
           Unlock high-definition MEMS microphone hardware. Instant broadcast acoustics with dual-capsule stereo &amp; voice beamforming.
@@ -332,10 +333,10 @@ html, body {
     <div class="act" id="act3">
       <div class="display-title md" style="margin-bottom: 36px;">
         <span class="word">Instant</span> <span class="word">Bridge.</span>
-        <span class="hl-pill word">Zero Latency.</span>
+        <span class="hl-pill"><span class="word">Zero</span> <span class="word">Latency.</span></span>
       </div>
 
-      <div style="display: flex; gap: 28px; align-items: center;" id="transportCards">
+      <div style="display: flex; gap: 28px; align-items: center; justify-content: center; width: 100%;" id="transportCards">
         <!-- Wi-Fi Card -->
         <div class="studio-card" style="width: 320px; align-items: center; text-align: center;">
           <div style="font-size: 40px; margin-bottom: 12px;">📡</div>
@@ -380,11 +381,11 @@ html, body {
 
       <div class="display-title lg" style="margin-bottom: 32px;">
         <span class="word">Sound</span> <span class="word">like</span>
-        <span class="hl-amber word">Shure SM7B.</span>
+        <span class="hl-amber"><span class="word">Shure</span> <span class="word">SM7B.</span></span>
       </div>
 
       <!-- DSP Features Glass Grid -->
-      <div style="display: flex; gap: 24px;" id="dspPillars">
+      <div style="display: flex; gap: 24px; align-items: center; justify-content: center; width: 100%;" id="dspPillars">
         <div class="studio-card" style="width: 380px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 24px;">🎛️</span>
@@ -563,7 +564,7 @@ function splitChars(selector) {
   const words = root.querySelectorAll('.word');
   const chars = [];
   words.forEach(w => {
-    const text = w.textContent;
+    const text = w.textContent.trim();
     w.textContent = '';
     for (let c of text) {
       const span = document.createElement('span');
