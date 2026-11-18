@@ -1,32 +1,38 @@
 <p align="center">
-  <img src="assets/logo/ezmic_logo.png" width="180" alt="EZmic Logo" style="border-radius: 36px; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.25);" />
+  <a href="https://fuziwaradesu67.github.io/EZmic/" target="_blank">
+    <img src="assets/ezmic_hero_preview.gif" alt="EZmic Cinematic Motion Graphic Showcase" width="100%" style="border-radius: 14px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6); max-width: 880px;" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://fuziwaradesu67.github.io/EZmic/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Showcase-GitHub%20Pages-10B981?style=for-the-badge&logoColor=white" alt="Live Showcase" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4-win64.exe"><img src="https://img.shields.io/badge/Windows-v1.1.4%20.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4.apk"><img src="https://img.shields.io/badge/Android-v1.1.4%20APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android APK" /></a>
+  <a href="https://buymeacoffee.com/eaadarsh"><img src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-gray?style=for-the-badge" alt="License" /></a>
 </p>
 
 # EZmic 🎙️⚡
 
-> **Turn your Android smartphone into a high-fidelity, ultra-low latency microphone for your Windows PC over Wi-Fi, USB, or Bluetooth.**  
-> *Created with ❤️ by [@FuziwaraDesu67](https://github.com/FuziwaraDesu67) • [☕ Buy me a coffee](https://buymeacoffee.com/eaadarsh)*
+> **Turn your Android smartphone into a studio-grade, ultra-low latency microphone for your Windows PC over Wi-Fi, USB, or Bluetooth.**  
+> *Created with ❤️ by [@FuziwaraDesu67](https://github.com/FuziwaraDesu67) • [☕ Buy me a coffee](https://buymeacoffee.com/eaadarsh) • [🌐 Live Interactive Showcase](https://fuziwaradesu67.github.io/EZmic/)*
 
 Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, and **Steam Games** with zero complex setup.
 
-<p align="center">
-  <a href="https://buymeacoffee.com/eaadarsh" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="42" />
-  </a>
-</p>
-
 ---
 
-## ⚡ What's New in v1.1 🚀
+## ⚡ What's New in v1.1.4 🚀
 
-- 🎛️ **Studio Noise Gate & Anti-Clipping Limiter**: Adjustable threshold (-60 dB to -25 dB) with anti-click smooth envelope and visual LED activity indicator to completely cut out keyboard/fan noise.
-- 🎧 **Real-Time Sidetone ("Listen to Mic")**: Zero-latency hardware monitor routed directly to your headphones/speakers.
-- ⌨️ **Global Hotkey (`Ctrl+Shift+M`)**: Instant mic mute toggle from inside any full-screen game or application.
-- 📡 **LAN IP Badge & 1-Click Copy**: PC automatically displays its primary Wi-Fi IP with instant copy-to-clipboard for seamless manual pairing.
-- 🔄 **In-App Auto-Updater**: Both Windows companion and Android app check for new GitHub releases on launch and provide 1-click update downloads with release notes.
-- 🔔 **Android Notification Quick Actions**: Toggle mute and stop broadcast directly from your phone's lock screen or notification shade.
-- 💾 **Settings Persistence**: Gain levels, connection mode, Noise Gate thresholds, and IP addresses automatically save across app restarts.
-- 🔒 **Stream Lock Safeguards**: Automatic broadcast shutdown confirmation when switching transports on the fly, and locked DSP filters to prevent live audio glitches.
+- 🎙️ **New Studio Condenser Branding**: Sleek studio condenser capsule silhouette with emerald acoustic pulse and high-contrast chamfers across Windows and Android.
+- 🌐 **Cinematic Motion Graphic & Landing Page**: Interactive browser-based product opener now live on **[GitHub Pages](https://fuziwaradesu67.github.io/EZmic/)**.
+- 🎛️ **Studio Mic Enhancer Suite**:
+  - **Shure SM7B Curve**: Warm broadcast proximity boost with high-frequency smoothing.
+  - **Crisp Esports**: High-clarity treble boost tuned for Discord callouts and competitive gaming.
+  - **Rode PodMic**: Rich, punchy podcast vocal curve with tight bass rolloff.
+  - **Dynamic Compressor & De-Esser**: Real-time vocal leveling and sibilance reduction.
+- 📜 **Adaptive High-DPI Scroll Layout**: Wrapped companion UI in a dark-themed `<ScrollViewer>` to prevent clipping on scaled laptop screens.
+- 🌙 **High-Contrast Dark Theme Dropdowns**: Complete custom styling for ComboBox popups eliminating unreadable white-on-white text.
+- 🔄 **Resilient Auto-Updater**: Upgraded PID-wait loop and 10-attempt file copy retry mechanism to ensure seamless OTA updates on Windows.
 
 ---
 
@@ -49,13 +55,13 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ### Step 1: Download the Files
 Grab the latest release from the **[Releases Page](https://github.com/FuziwaraDesu67/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.1.3-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.3/EZmic-v1.1.3-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.1.3.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.3/EZmic-v1.1.3.apk) *(Native app, high quality)*
+- 💻 **Windows PC**: [**Download EZmic-v1.1.4-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.4.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4.apk) *(Native app, high quality)*
 
 *(All versions available on the **[Releases](https://github.com/FuziwaraDesu67/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
-1. Double-click `EZmic-v1.1.3-win64.exe` on your PC.
+1. Double-click `EZmic-v1.1.4-win64.exe` (or the `EZmic` shortcut on your Desktop).
 2. If you don't already have a virtual audio cable, the app will show a yellow banner:  
    👉 Click **"Install Free Cable"** (it downloads and installs VB-Audio Cable automatically in 10 seconds).
 3. Select your desired connection mode (**Wi-Fi**, **USB**, or **Bluetooth**) and click **Start receiver**.

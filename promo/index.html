@@ -469,8 +469,11 @@ html, body {
         </a>
       </div>
 
-      <div style="margin-top: 28px; font-family: 'JetBrains Mono'; font-size: 14px; color: #64748B;">
-        Zero Latency • Studio DSP • Dual-Mono &amp; Stereo • 100% Free
+      <div style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 18px; pointer-events: auto;">
+        <button id="btnReplay" onclick="window.OPENER.tl.restart()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #94A3B8; padding: 10px 22px; border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)';this.style.color='#FFFFFF'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='#94A3B8'">
+          <span style="font-size: 15px;">↺</span> Replay Showcase
+        </button>
+        <span style="font-family: 'JetBrains Mono'; font-size: 13px; color: #64748B;">Zero Latency • Studio DSP • Dual-Mono &amp; Stereo • 100% Free</span>
       </div>
     </div>
 
@@ -811,8 +814,7 @@ tl.fromTo('#act5 > div:last-child',
   'act5+=1.1'
 );
 
-// Loop seamlessly back to start
-tl.to('#act5', { autoAlpha: 0, duration: 0.5, ease: 'power2.in' }, 'act5+=3.4');
+// Act 5 settles and stays interactive for visitors (CTA download buttons active)
 
 // Expose OPENER for frame rendering and headless capture
 window.OPENER = {
