@@ -464,6 +464,20 @@
                     </StackPanel>
                     <TextBlock Text="Mute Hotkey: Ctrl+Shift+M" FontSize="10" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                 </Grid>
+
+                <!-- USB Helper: 1-Click Install to Phone -->
+                <Border x:Name="BorderUsbHelper" Background="#0D1626" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
+                            <TextBlock x:Name="TxtUsbDeviceStatus" Text="Connect phone via USB (with USB Debugging)" FontSize="11" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button x:Name="BtnInstallApkToPhone" Content="📲 Install App to Phone" Grid.Column="1" Click="BtnInstallApkToPhone_Click" Padding="10,3" Height="26" FontSize="11" Background="#10B981" Foreground="#042F1E" FontWeight="SemiBold" Cursor="Hand" BorderThickness="0"/>
+                    </Grid>
+                </Border>
             </StackPanel>
         </Border>
 

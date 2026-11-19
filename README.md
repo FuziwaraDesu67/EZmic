@@ -6,8 +6,8 @@
 
 <p align="center">
   <a href="https://fuziwaradesu67.github.io/EZmic/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Showcase-GitHub%20Pages-10B981?style=for-the-badge&logoColor=white" alt="Live Showcase" /></a>
-  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5-win64.exe"><img src="https://img.shields.io/badge/Windows-v1.1.5%20.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
-  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5.apk"><img src="https://img.shields.io/badge/Android-v1.1.5%20APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android APK" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.6/EZmic-v1.1.6-win64.exe"><img src="https://img.shields.io/badge/Windows-v1.1.6%20.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.6/EZmic-v1.1.6.apk"><img src="https://img.shields.io/badge/Android-v1.1.6%20APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android APK" /></a>
   <a href="https://buymeacoffee.com/eaadarsh"><img src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
   <a href="https://github.com/FuziwaraDesu67/EZmic/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-gray?style=for-the-badge" alt="License" /></a>
 </p>
@@ -18,6 +18,14 @@
 > *Created with ❤️ by [@FuziwaraDesu67](https://github.com/FuziwaraDesu67) • [☕ Buy me a coffee](https://buymeacoffee.com/eaadarsh) • [🌐 Live Interactive Showcase](https://fuziwaradesu67.github.io/EZmic/)*
 
 Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, and **Steam Games** with zero complex setup.
+
+---
+
+## 📲 What's New in v1.1.6 (In-App Downloader & 1-Click Phone Installer) 🚀
+
+- 📲 **Native In-App APK Downloader & Installer**: No more leaving the app or opening GitHub in a browser! When an update is detected, EZmic downloads the APK directly with live progress (0–100%) and launches the Android Package Installer automatically.
+- ⚡ **1-Click ADB Phone Install from PC Companion**: Connect your Android phone via USB cable and click `[ 📲 Install App to Phone ]` on the PC companion — EZmic installs directly to your phone via ADB with zero hassle.
+- 🛡️ **Full Security Hardening**: All v1.1.5 security audit protections (Client IP Pinning, Loopback USB binding, PE header verification, certified driver portal) are fully incorporated.
 
 ---
 
@@ -53,13 +61,13 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ### Step 1: Download the Files
 Grab the latest release from the **[Releases Page](https://github.com/FuziwaraDesu67/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.1.5-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.1.5.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5.apk) *(Native app, high quality)*
+- 💻 **Windows PC**: [**Download EZmic-v1.1.6-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.6/EZmic-v1.1.6-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.6.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.6/EZmic-v1.1.6.apk) *(Native app, high quality)*
 
 *(All versions available on the **[Releases](https://github.com/FuziwaraDesu67/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
-1. Double-click `EZmic-v1.1.5-win64.exe` (or the `EZmic` shortcut on your Desktop).
+1. Double-click `EZmic-v1.1.6-win64.exe` (or the `EZmic` shortcut on your Desktop).
 2. If you don't already have a virtual audio cable, the app will show a yellow banner:  
    👉 Click **"Get VB-CABLE"** (opens official portal to install certified driver).
 3. Select your desired connection mode (**Wi-Fi**, **USB**, or **Bluetooth**) and click **Start receiver**.

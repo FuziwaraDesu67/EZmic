@@ -154,4 +154,94 @@ public static class AdbHelper
         await RunAdbCommandAsync($"reverse --remove tcp:{port}");
         await RunAdbCommandAsync($"forward --remove tcp:{port}");
     }
+
+    public static async Task<string?> FindOrDownloadApkAsync()
+    {
+        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string cacheApk = Path.Combine(localAppData, "MicToPC", "EZmic.apk");
+
+        // 1. Check local release / build paths first
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        string[] localCandidates =
+        {
+            Path.Combine(baseDir, "EZmic.apk"),
+            cacheApk,
+            @"D:\games\mic\release\EZmic-v1.1.6.apk",
+            @"D:\games\mic\android\app\build\outputs\apk\debug\app-debug.apk",
+            @"D:\games\mic\release\EZmic-v1.1.5.apk"
+        };
+
+        foreach (var candidate in localCandidates)
+        {
+            if (File.Exists(candidate) && new FileInfo(candidate).Length > 1024 * 1024)
+            {
+                return candidate;
+            }
+        }
+
+        // 2. Fetch latest APK directly from GitHub Releases via HTTP (no browser redirect)
+        try
+        {
+            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            client.DefaultRequestHeaders.Add("User-Agent", "EZmic-PC-Companion");
+            client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+
+            string apiUrl = "https://api.github.com/repos/FuziwaraDesu67/EZmic/releases/latest";
+            var response = await client.GetAsync(apiUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                string json = await response.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("assets", out var assets) && assets.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    foreach (var asset in assets.EnumerateArray())
+                    {
+                        string name = asset.GetProperty("name").GetString() ?? "";
+                        if (name.EndsWith(".apk", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
+                            if (!string.IsNullOrEmpty(downloadUrl))
+                            {
+                                Directory.CreateDirectory(Path.GetDirectoryName(cacheApk)!);
+                                var apkBytes = await client.GetByteArrayAsync(downloadUrl);
+                                await File.WriteAllBytesAsync(cacheApk, apkBytes);
+                                return cacheApk;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+    public static async Task<(bool Success, string Message)> InstallApkOnDeviceAsync(string apkPath, string? deviceSerial = null)
+    {
+        if (!File.Exists(apkPath))
+        {
+            return (false, "APK file not found on PC.");
+        }
+
+        string targetDevice = string.IsNullOrEmpty(deviceSerial) ? "" : $"-s \"{deviceSerial}\" ";
+        string args = $"{targetDevice}install -r -d \"{apkPath}\"";
+
+        var (success, output) = await RunAdbCommandAsync(args);
+        if (success && output.Contains("Success", StringComparison.OrdinalIgnoreCase))
+        {
+            return (true, "EZmic successfully installed on your phone!");
+        }
+
+        if (output.Contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE", StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, "Conflicting version installed on phone. Please uninstall old version first.");
+        }
+        if (output.Contains("INSTALL_FAILED_USER_RESTRICTED", StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, "Blocked by phone: please enable 'Install via USB' in Android Developer Options.");
+        }
+
+        return (false, string.IsNullOrWhiteSpace(output) ? "Installation failed." : output.Trim());
+    }
 }

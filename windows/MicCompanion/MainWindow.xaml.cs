@@ -268,6 +268,72 @@ public partial class MainWindow : Window
         DriverInstaller.OpenOfficialDownloadPage(AppendLog);
     }
 
+    private async void BtnInstallApkToPhone_Click(object sender, RoutedEventArgs e)
+    {
+        BtnInstallApkToPhone.IsEnabled = false;
+        TxtUsbDeviceStatus.Text = "Checking connected devices...";
+        AppendLog("Checking for connected Android phone via ADB...");
+
+        try
+        {
+            var devices = await AdbHelper.GetConnectedDevicesAsync();
+            if (devices.Count == 0)
+            {
+                TxtUsbDeviceStatus.Text = "No phone detected. Enable USB Debugging!";
+                AppendLog("ADB: No phone detected. Ensure phone is connected via USB with 'USB Debugging' enabled in Developer Options.");
+                System.Windows.MessageBox.Show(
+                    "No phone detected via ADB.\n\nTo install EZmic directly to your phone:\n1. Enable Developer Options on your phone\n2. Turn on 'USB Debugging'\n3. Connect phone via USB cable and tap 'Allow' on the debugging prompt.",
+                    "No Device Detected",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            string serial = devices[0];
+            TxtUsbDeviceStatus.Text = $"Device detected: {serial}. Locating APK...";
+            AppendLog($"ADB: Found connected device: {serial}. Locating APK package...");
+
+            string? apkPath = await AdbHelper.FindOrDownloadApkAsync();
+            if (string.IsNullOrEmpty(apkPath) || !System.IO.File.Exists(apkPath))
+            {
+                TxtUsbDeviceStatus.Text = "Failed to locate or download APK";
+                AppendLog("Error: Could not locate local APK or download latest release.");
+                System.Windows.MessageBox.Show("Could not find or download the EZmic APK package.", "Installation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            TxtUsbDeviceStatus.Text = "Installing APK to phone...";
+            AppendLog($"ADB: Installing {System.IO.Path.GetFileName(apkPath)} to {serial}...");
+
+            var (success, msg) = await AdbHelper.InstallApkOnDeviceAsync(apkPath, serial);
+            if (success)
+            {
+                TxtUsbDeviceStatus.Text = "✅ Installed successfully on phone!";
+                AppendLog($"ADB: {msg}");
+                System.Windows.MessageBox.Show(
+                    "EZmic has been successfully installed on your Android phone!\n\nYou can now open EZmic on your phone and tap Connect.",
+                    "Installation Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                TxtUsbDeviceStatus.Text = "Installation failed: " + msg;
+                AppendLog($"ADB Install failed: {msg}");
+                System.Windows.MessageBox.Show($"Installation failed:\n\n{msg}", "Installation Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            TxtUsbDeviceStatus.Text = "Error: " + ex.Message;
+            AppendLog($"ADB error: {ex.Message}");
+        }
+        finally
+        {
+            BtnInstallApkToPhone.IsEnabled = true;
+        }
+    }
+
     private async void BtnConnect_Click(object sender, RoutedEventArgs e)
     {
         if (_isStarted)
@@ -352,6 +418,7 @@ public partial class MainWindow : Window
         IconBluetooth.Fill = isBt ? emerald : inactiveFg;
 
         TxtModeBadge.Text = $"{GetModeDisplayName(_selectedTransportMode)} Ready";
+        BorderUsbHelper.Visibility = isUsb ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void BtnMode_Click(object sender, RoutedEventArgs e)

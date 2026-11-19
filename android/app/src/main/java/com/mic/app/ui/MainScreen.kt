@@ -38,8 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mic.app.service.StreamingState
 import com.mic.app.util.AppUpdateInfo
+import com.mic.app.util.DownloadState
+import com.mic.app.util.InAppUpdateManager
 import com.mic.app.util.UpdateChecker
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.io.File
 import kotlin.math.log10
 import kotlin.math.max
 
@@ -89,6 +93,12 @@ fun MainScreen(
     var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var isCheckingUpdate by remember { mutableStateOf(false) }
+    var isDownloadingUpdate by remember { mutableStateOf(false) }
+    var updateProgressPercent by remember { mutableIntStateOf(0) }
+    var updateProgressText by remember { mutableStateOf("") }
+    var downloadedApkFile by remember { mutableStateOf<File?>(null) }
+    var updateErrorMessage by remember { mutableStateOf<String?>(null) }
+    var updateDownloadJob by remember { mutableStateOf<Job?>(null) }
 
     // Auto-save preferences
     LaunchedEffect(selectedMode) {
@@ -852,11 +862,15 @@ fun MainScreen(
             }
         }
 
-        // Automatic / Manual Update Alert Dialog (Only shown when an actual update is available)
+        // Automatic / Manual In-App Update Alert Dialog (Direct APK download with package installer)
         if (showUpdateDialog && updateInfo != null && updateInfo!!.hasUpdate) {
             val info = updateInfo!!
             AlertDialog(
-                onDismissRequest = { showUpdateDialog = false },
+                onDismissRequest = {
+                    if (!isDownloadingUpdate) {
+                        showUpdateDialog = false
+                    }
+                },
                 containerColor = Color(0xFF141923),
                 titleContentColor = TextPrimary,
                 textContentColor = TextSecondary,
@@ -865,7 +879,7 @@ fun MainScreen(
                     Text("🎉 New Update: ${info.latestVersion}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 },
                 text = {
-                    Column {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         if (info.releaseNotes.isNotBlank()) {
                             Text(
                                 text = info.releaseNotes.take(300),
@@ -874,31 +888,134 @@ fun MainScreen(
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                         }
-                        Text(
-                            text = "Download the latest APK to get new features and improvements.",
-                            fontSize = 12.sp,
-                            color = TextMuted
-                        )
+
+                        if (downloadedApkFile != null) {
+                            Text(
+                                text = "✅ Update downloaded successfully. Tap Install Now to complete the update.",
+                                fontSize = 12.sp,
+                                color = StudioGreen,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        } else if (isDownloadingUpdate) {
+                            Text(
+                                text = "Downloading update ($updateProgressPercent% • $updateProgressText)...",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LinearProgressIndicator(
+                                progress = { (updateProgressPercent / 100f).coerceIn(0f, 1f) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = StudioGreen,
+                                trackColor = Color(0xFF1E2638)
+                            )
+                        } else if (updateErrorMessage != null) {
+                            Text(
+                                text = "⚠️ Download error: $updateErrorMessage",
+                                fontSize = 12.sp,
+                                color = Color(0xFFF87171)
+                            )
+                        } else {
+                            Text(
+                                text = "Direct in-app download and installation. No browser redirect.",
+                                fontSize = 12.sp,
+                                color = TextMuted
+                            )
+                        }
                     }
                 },
                 confirmButton = {
-                    Button(
-                        onClick = {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(info.apkUrl))
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                            showUpdateDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = StudioGreen),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Download APK", color = Color(0xFF042F1E), fontWeight = FontWeight.Bold)
+                    if (downloadedApkFile != null) {
+                        Button(
+                            onClick = {
+                                val file = downloadedApkFile!!
+                                if (InAppUpdateManager.canInstallApks(context)) {
+                                    val launched = InAppUpdateManager.installApk(context, file)
+                                    if (launched) {
+                                        showUpdateDialog = false
+                                    } else {
+                                        Toast.makeText(context, "Unable to launch installer. Please check file permissions.", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Please allow EZmic to install unknown apps to continue", Toast.LENGTH_LONG).show()
+                                    InAppUpdateManager.openInstallPermissionSettings(context)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = StudioGreen),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("📲 Install Now", color = Color(0xFF042F1E), fontWeight = FontWeight.Bold)
+                        }
+                    } else if (isDownloadingUpdate) {
+                        Button(
+                            onClick = {
+                                updateDownloadJob?.cancel()
+                                isDownloadingUpdate = false
+                                updateErrorMessage = "Download cancelled"
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF374151)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Cancel", color = TextPrimary)
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                isDownloadingUpdate = true
+                                updateErrorMessage = null
+                                updateProgressPercent = 0
+                                updateProgressText = "0 MB"
+
+                                updateDownloadJob = coroutineScope.launch {
+                                    InAppUpdateManager.downloadApk(context, info.apkUrl, info.latestVersion)
+                                        .collect { state ->
+                                            when (state) {
+                                                is DownloadState.Progress -> {
+                                                    updateProgressPercent = state.percent
+                                                    val readMb = String.format(java.util.Locale.US, "%.1f", state.bytesRead / 1048576.0)
+                                                    val totalMb = if (state.totalBytes > 0) {
+                                                        String.format(java.util.Locale.US, "%.1f MB", state.totalBytes / 1048576.0)
+                                                    } else "Unknown"
+                                                    updateProgressText = "$readMb MB / $totalMb"
+                                                }
+                                                is DownloadState.Success -> {
+                                                    isDownloadingUpdate = false
+                                                    downloadedApkFile = state.file
+                                                    // Automatically invoke system package installer
+                                                    if (InAppUpdateManager.canInstallApks(context)) {
+                                                        InAppUpdateManager.installApk(context, state.file)
+                                                    } else {
+                                                        Toast.makeText(context, "Please allow EZmic to install updates to complete", Toast.LENGTH_LONG).show()
+                                                        InAppUpdateManager.openInstallPermissionSettings(context)
+                                                    }
+                                                }
+                                                is DownloadState.Error -> {
+                                                    isDownloadingUpdate = false
+                                                    updateErrorMessage = state.message
+                                                }
+                                                else -> {}
+                                            }
+                                        }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = StudioGreen),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(if (updateErrorMessage != null) "Retry" else "⚡ Update Now", color = Color(0xFF042F1E), fontWeight = FontWeight.Bold)
+                        }
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showUpdateDialog = false }) {
-                        Text("Later", color = TextSecondary)
+                    if (!isDownloadingUpdate) {
+                        TextButton(onClick = {
+                            showUpdateDialog = false
+                            updateErrorMessage = null
+                        }) {
+                            Text("Later", color = TextSecondary)
+                        }
                     }
                 }
             )
