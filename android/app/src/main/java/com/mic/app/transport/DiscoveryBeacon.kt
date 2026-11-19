@@ -48,11 +48,12 @@ class DiscoveryBeacon(private val context: Context) {
                     if (json.optString("service") == "mic-to-pc") {
                         val deviceName = json.optString("device", "Windows PC")
                         val port = json.optInt("port", PacketConstants.DEFAULT_WIFI_AUDIO_PORT)
-                        val payloadIp = json.optString("ip")
-                        val senderIp = if (payloadIp.isNotEmpty() && payloadIp != "127.0.0.1") {
-                            payloadIp
+                        // Security (S-01): Always bind to the physical UDP packet origin address to prevent redirection
+                        val physicalIp = packet.address?.hostAddress
+                        val senderIp = if (!physicalIp.isNullOrEmpty() && physicalIp != "0.0.0.0") {
+                            physicalIp
                         } else {
-                            packet.address?.hostAddress ?: "127.0.0.1"
+                            json.optString("ip", "127.0.0.1")
                         }
 
                         return@withContext DiscoveredPc(

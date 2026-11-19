@@ -39,26 +39,10 @@ class BluetoothTransmitter(
             val adapter = BluetoothAdapter.getDefaultAdapter()
             adapter?.cancelDiscovery()
 
-            var sock: BluetoothSocket? = null
-
-            // 1. Try secure RFCOMM
-            try {
-                sock = dev.createRfcommSocketToServiceRecord(PacketConstants.BLUETOOTH_SERVICE_UUID)
-                sock.connect()
-            } catch (e1: Exception) {
-                // 2. Try insecure RFCOMM (bypasses PIN / pairing handshake locks)
-                try {
-                    try { sock?.close() } catch (_: Exception) {}
-                    sock = dev.createInsecureRfcommSocketToServiceRecord(PacketConstants.BLUETOOTH_SERVICE_UUID)
-                    sock.connect()
-                } catch (e2: Exception) {
-                    // 3. Fallback to reflection on channel 1
-                    try { sock?.close() } catch (_: Exception) {}
-                    val m = dev.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
-                    sock = m.invoke(dev, 1) as BluetoothSocket
-                    sock.connect()
-                }
-            }
+            // Security (S-07): Enforce secure, service-specific UUID connection.
+            // Do not downgrade to insecure RFCOMM or arbitrary channel 1 reflection.
+            val sock = dev.createRfcommSocketToServiceRecord(PacketConstants.BLUETOOTH_SERVICE_UUID)
+            sock.connect()
 
             val activeSock = sock ?: throw java.io.IOException("Unable to create Bluetooth socket")
             socket = activeSock

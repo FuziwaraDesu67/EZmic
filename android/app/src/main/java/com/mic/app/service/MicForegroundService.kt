@@ -19,11 +19,13 @@ import com.mic.app.audio.AudioCaptureManager
 import com.mic.app.transport.IAudioTransmitter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class MicForegroundService : Service() {
@@ -33,6 +35,7 @@ class MicForegroundService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
 
     private var audioCaptureManager: AudioCaptureManager? = null
+    private var connectionJob: Job? = null
     var activeTransmitter: IAudioTransmitter? = null
         private set
 
@@ -92,8 +95,12 @@ class MicForegroundService : Service() {
             updateNotification(msg)
         }
 
-        serviceScope.launch {
+        connectionJob?.cancel()
+        connectionJob = serviceScope.launch {
             val connected = transmitter.connect()
+            // Security (S-08): Ensure session was not cancelled/stopped while connect() was in-flight
+            if (!isActive || activeTransmitter != transmitter) return@launch
+
             if (connected) {
                 audioCaptureManager = AudioCaptureManager(
                     onPacketReady = { packet ->
@@ -132,6 +139,9 @@ class MicForegroundService : Service() {
     }
 
     fun stopStreaming(reason: String? = null) {
+        connectionJob?.cancel()
+        connectionJob = null
+
         audioCaptureManager?.stop()
         audioCaptureManager = null
 

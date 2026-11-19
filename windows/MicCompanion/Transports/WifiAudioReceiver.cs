@@ -11,6 +11,11 @@ public class WifiAudioReceiver : IAudioTransport
     private Task? _receiveTask;
     private readonly int _port;
 
+    // Security: Active Client IP Pinning & Session Locking (Resolves S-03 Audio Injection)
+    private IPAddress? _lockedSenderIp;
+    private DateTime _lastAuthorizedPacketTime = DateTime.MinValue;
+    private DateTime _lastUnauthorizedWarningTime = DateTime.MinValue;
+
     public string Name => "Wi-Fi";
     public bool IsConnected { get; private set; }
 
@@ -29,12 +34,14 @@ public class WifiAudioReceiver : IAudioTransport
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _udpClient = new UdpClient(new IPEndPoint(IPAddress.Any, _port));
+        _lockedSenderIp = null;
+        _lastAuthorizedPacketTime = DateTime.MinValue;
 
         _receiveTask = Task.Run(() => ReceiveLoop(_cts.Token));
 
         IsConnected = true;
-        ConnectionStateChanged?.Invoke(true, $"Listening on UDP port {_port}");
-        LogMessage?.Invoke($"Wi-Fi receiver active on UDP port {_port}");
+        ConnectionStateChanged?.Invoke(true, $"Listening on UDP port {_port} (Session Lock Active)");
+        LogMessage?.Invoke($"Wi-Fi receiver active on UDP port {_port} (Protected with Client IP Pinning)");
 
         return Task.CompletedTask;
     }
@@ -46,14 +53,51 @@ public class WifiAudioReceiver : IAudioTransport
             try
             {
                 var result = await _udpClient.ReceiveAsync(token);
-                if (result.Buffer.Length >= PacketConstants.HeaderSize)
+                if (result.Buffer.Length < PacketConstants.HeaderSize)
+                    continue;
+
+                var senderIp = result.RemoteEndPoint.Address;
+
+                // 1. Verify that sender is on local/private network
+                if (!IsPrivateOrLocal(senderIp))
                 {
-                    var packet = AudioPacket.Parse(result.Buffer, 0, result.Buffer.Length);
-                    if (packet != null)
+                    LogRateLimitedSecurityWarning(senderIp, "Rejected packet from non-private IP");
+                    continue;
+                }
+
+                // 2. Parse packet header
+                var packet = AudioPacket.Parse(result.Buffer, 0, result.Buffer.Length);
+                if (packet == null)
+                    continue;
+
+                // 3. Client IP Pinning & Session Lock enforcement (Neutralizes S-03)
+                DateTime now = DateTime.UtcNow;
+                if (_lockedSenderIp == null)
+                {
+                    _lockedSenderIp = senderIp;
+                    _lastAuthorizedPacketTime = now;
+                    LogMessage?.Invoke($"[Security] Session locked to authorized client IP: {senderIp}");
+                }
+                else if (!_lockedSenderIp.Equals(senderIp))
+                {
+                    // Allow session handover only if previous client has been idle/silent for > 8 seconds
+                    if ((now - _lastAuthorizedPacketTime).TotalSeconds > 8)
                     {
-                        PacketReceived?.Invoke(packet);
+                        var oldIp = _lockedSenderIp;
+                        _lockedSenderIp = senderIp;
+                        _lastAuthorizedPacketTime = now;
+                        LogMessage?.Invoke($"[Security] Previous session from {oldIp} timed out. Re-locked to {senderIp}");
+                    }
+                    else
+                    {
+                        // Drop unauthorized audio packet from other LAN devices!
+                        LogRateLimitedSecurityWarning(senderIp, $"Blocked unauthorized audio injection attempt while locked to {_lockedSenderIp}");
+                        continue;
                     }
                 }
+
+                _lastAuthorizedPacketTime = now;
+                PacketReceived?.Invoke(packet);
             }
             catch (OperationCanceledException)
             {
@@ -69,6 +113,37 @@ public class WifiAudioReceiver : IAudioTransport
         }
     }
 
+    private void LogRateLimitedSecurityWarning(IPAddress senderIp, string reason)
+    {
+        DateTime now = DateTime.UtcNow;
+        if ((now - _lastUnauthorizedWarningTime).TotalSeconds > 3)
+        {
+            _lastUnauthorizedWarningTime = now;
+            LogMessage?.Invoke($"[Security Warning] {reason} (Sender: {senderIp})");
+        }
+    }
+
+    private static bool IsPrivateOrLocal(IPAddress ip)
+    {
+        if (IPAddress.IsLoopback(ip))
+            return true;
+
+        if (ip.AddressFamily == AddressFamily.InterNetwork)
+        {
+            byte[] bytes = ip.GetAddressBytes();
+            // 10.0.0.0/8
+            if (bytes[0] == 10) return true;
+            // 172.16.0.0/12
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
+            // 192.168.0.0/16
+            if (bytes[0] == 192 && bytes[1] == 168) return true;
+            // 169.254.0.0/16 (Link-local)
+            if (bytes[0] == 169 && bytes[1] == 254) return true;
+        }
+
+        return false;
+    }
+
     private void StopInternal()
     {
         _cts?.Cancel();
@@ -76,6 +151,8 @@ public class WifiAudioReceiver : IAudioTransport
         _udpClient = null;
         _cts?.Dispose();
         _cts = null;
+        _lockedSenderIp = null;
+        _lastAuthorizedPacketTime = DateTime.MinValue;
 
         if (IsConnected)
         {

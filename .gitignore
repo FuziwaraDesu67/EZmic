@@ -26,6 +26,7 @@ dist/
 release/*.exe
 release/*.pdb
 release/*.zip
+release/*.apk
 Thumbs.db
 ehthumbs.db
 Desktop.ini

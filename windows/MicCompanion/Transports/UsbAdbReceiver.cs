@@ -58,8 +58,8 @@ public class UsbAdbReceiver : IAudioTransport
             }
         }
 
-        // Listen on loopback port for incoming TCP connection from Android via ADB reverse tunnel
-        _listener = new TcpListener(IPAddress.Any, _port);
+        // Listen on loopback port only (prevents external LAN exposure; resolves S-02)
+        _listener = new TcpListener(IPAddress.Loopback, _port);
         _listener.Start();
 
         IsConnected = false;
@@ -200,11 +200,15 @@ public class UsbAdbReceiver : IAudioTransport
         }
     }
 
-    public Task StopAsync()
+    public async Task StopAsync()
     {
         StopInternal();
-        LogMessage?.Invoke("USB receiver stopped.");
-        return Task.CompletedTask;
+        try
+        {
+            await AdbHelper.RemovePortTunnelAsync(_port);
+        }
+        catch { }
+        LogMessage?.Invoke("USB receiver stopped and ADB tunnel removed.");
     }
 
     public void Dispose()

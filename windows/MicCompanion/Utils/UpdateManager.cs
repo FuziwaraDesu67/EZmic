@@ -24,7 +24,7 @@ public static class UpdateManager
         get
         {
             var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.3";
+            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.5";
         }
     }
 
@@ -68,7 +68,7 @@ public static class UpdateManager
             info.ReleaseNotes = root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
             info.ReleaseUrl = root.TryGetProperty("html_url", out var h) ? h.GetString() ?? $"https://github.com/{RepoOwner}/{RepoName}/releases" : "";
 
-            // Find Windows .exe asset
+            // Find Windows .exe asset specifically
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 foreach (var asset in assets.EnumerateArray())
@@ -83,13 +83,10 @@ public static class UpdateManager
                 }
             }
 
-            // Fallback download URL to release page if no direct exe asset found
-            if (string.IsNullOrEmpty(info.DownloadUrl))
-            {
-                info.DownloadUrl = info.ReleaseUrl;
-            }
-
-            info.IsUpdateAvailable = IsNewerVersion(tagName, CurrentVersion);
+            // Security (S-10): NEVER fall back to downloading the Release HTML page as an executable!
+            // In-app update is only enabled if a verified .exe asset exists on GitHub Releases.
+            bool isNewer = IsNewerVersion(tagName, CurrentVersion);
+            info.IsUpdateAvailable = isNewer && !string.IsNullOrEmpty(info.DownloadUrl);
         }
         catch
         {
@@ -127,28 +124,57 @@ public static class UpdateManager
 
     public static async Task<string> DownloadUpdateAsync(string downloadUrl, Action<int>? progressCallback, CancellationToken token)
     {
-        string tempPath = Path.Combine(Path.GetTempPath(), "EZmic-update.exe");
+        if (string.IsNullOrWhiteSpace(downloadUrl) || !downloadUrl.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Invalid or non-executable update URL.");
+        }
+
+        // Security (S-12): Use an isolated, randomized private directory rather than a static predictable path
+        string updateDir = Path.Combine(Path.GetTempPath(), $"EZmic_Update_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(updateDir);
+        string tempPath = Path.Combine(updateDir, "EZmic-update.exe");
 
         using var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, token);
         response.EnsureSuccessStatusCode();
 
         long? totalBytes = response.Content.Headers.ContentLength;
         using var stream = await response.Content.ReadAsStreamAsync(token);
-        using var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None);
-
-        byte[] buffer = new byte[81920];
-        long totalRead = 0;
-        int read;
-
-        while ((read = await stream.ReadAsync(buffer, token)) > 0)
+        using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            await fileStream.WriteAsync(buffer.AsMemory(0, read), token);
-            totalRead += read;
+            byte[] buffer = new byte[81920];
+            long totalRead = 0;
+            int read;
 
-            if (totalBytes.HasValue && totalBytes.Value > 0)
+            while ((read = await stream.ReadAsync(buffer, token)) > 0)
             {
-                int percent = (int)(totalRead * 100 / totalBytes.Value);
-                progressCallback?.Invoke(percent);
+                await fileStream.WriteAsync(buffer.AsMemory(0, read), token);
+                totalRead += read;
+
+                if (totalBytes.HasValue && totalBytes.Value > 0)
+                {
+                    int percent = (int)(totalRead * 100 / totalBytes.Value);
+                    progressCallback?.Invoke(percent);
+                }
+            }
+        }
+
+        // Security (S-04 / S-10): Verify downloaded file has valid Windows PE magic header ('MZ')
+        var fileInfo = new FileInfo(tempPath);
+        if (fileInfo.Length < 1024)
+        {
+            File.Delete(tempPath);
+            throw new InvalidDataException("Downloaded update file is too small to be a valid Windows binary.");
+        }
+
+        using (var verifyStream = new FileStream(tempPath, FileMode.Open, FileAccess.Read))
+        {
+            byte[] magic = new byte[2];
+            int magicRead = verifyStream.Read(magic, 0, 2);
+            if (magicRead < 2 || magic[0] != 0x4D || magic[1] != 0x5A) // 'M' 'Z'
+            {
+                verifyStream.Dispose();
+                File.Delete(tempPath);
+                throw new InvalidDataException("Security verification failed: Downloaded file is not a valid Windows executable.");
             }
         }
 
@@ -163,7 +189,8 @@ public static class UpdateManager
             int currentPid = Process.GetCurrentProcess().Id;
             if (!string.IsNullOrEmpty(currentExe) && File.Exists(currentExe))
             {
-                string scriptPath = Path.Combine(Path.GetTempPath(), "ezmic_replace_and_restart.bat");
+                string targetDir = Path.GetDirectoryName(updateExePath) ?? Path.GetTempPath();
+                string scriptPath = Path.Combine(targetDir, "ezmic_replace_and_restart.bat");
                 string script = $@"@echo off
 set ""SRC={updateExePath}""
 set ""DST={currentExe}""

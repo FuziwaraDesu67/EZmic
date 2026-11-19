@@ -6,8 +6,8 @@
 
 <p align="center">
   <a href="https://fuziwaradesu67.github.io/EZmic/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Showcase-GitHub%20Pages-10B981?style=for-the-badge&logoColor=white" alt="Live Showcase" /></a>
-  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4-win64.exe"><img src="https://img.shields.io/badge/Windows-v1.1.4%20.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
-  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4.apk"><img src="https://img.shields.io/badge/Android-v1.1.4%20APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android APK" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5-win64.exe"><img src="https://img.shields.io/badge/Windows-v1.1.5%20.exe-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
+  <a href="https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5.apk"><img src="https://img.shields.io/badge/Android-v1.1.5%20APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android APK" /></a>
   <a href="https://buymeacoffee.com/eaadarsh"><img src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
   <a href="https://github.com/FuziwaraDesu67/EZmic/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-gray?style=for-the-badge" alt="License" /></a>
 </p>
@@ -21,18 +21,16 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ---
 
-## ⚡ What's New in v1.1.4 🚀
+## 🛡️ What's New in v1.1.5 (Security Hardened Release) 🔒
 
-- 🎙️ **New Studio Condenser Branding**: Sleek studio condenser capsule silhouette with emerald acoustic pulse and high-contrast chamfers across Windows and Android.
-- 🌐 **Cinematic Motion Graphic & Landing Page**: Interactive browser-based product opener now live on **[GitHub Pages](https://fuziwaradesu67.github.io/EZmic/)**.
-- 🎛️ **Studio Mic Enhancer Suite**:
-  - **Shure SM7B Curve**: Warm broadcast proximity boost with high-frequency smoothing.
-  - **Crisp Esports**: High-clarity treble boost tuned for Discord callouts and competitive gaming.
-  - **Rode PodMic**: Rich, punchy podcast vocal curve with tight bass rolloff.
-  - **Dynamic Compressor & De-Esser**: Real-time vocal leveling and sibilance reduction.
-- 📜 **Adaptive High-DPI Scroll Layout**: Wrapped companion UI in a dark-themed `<ScrollViewer>` to prevent clipping on scaled laptop screens.
-- 🌙 **High-Contrast Dark Theme Dropdowns**: Complete custom styling for ComboBox popups eliminating unreadable white-on-white text.
-- 🔄 **Resilient Auto-Updater**: Upgraded PID-wait loop and 10-attempt file copy retry mechanism to ensure seamless OTA updates on Windows.
+- 🛡️ **Client IP Pinning & Wi-Fi Session Locking**: Protects against LAN audio injection (CVSS 8.5 / S-03). Locks active streaming exclusively to the verified sender IP; drops and alerts on unauthorized packets from third-party devices on shared networks.
+- 🔒 **Loopback-Only USB Binding**: Bound USB TCP receiver strictly to `127.0.0.1` (S-02), eliminating external LAN exposure.
+- 📡 **Discovery Beacon Spoof Protection**: Phone stream target is physically bound to UDP packet sender origin (S-01), preventing redirection to rogue receivers.
+- 🛡️ **Safe Driver Portal Guidance**: Directs users to the official vendor portal for certified VB-Audio CABLE drivers (S-05), mitigating CVE-2026-124019 and removing unverified elevated execution.
+- 🔐 **Binary Verified Auto-Updater**: Enforces PE binary header validation (`MZ`) and randomized temp staging paths; eliminates HTML fallback execution (S-04, S-10, S-12).
+- 📱 **Android Stop State Integrity**: Cancels pending connection jobs on disconnect, preventing background capture starts after Stop is pressed (S-08).
+- 🎛️ **Audio Buffer Parity & UI Flood Protection**: Enforces even-byte PCM buffer alignment and rate-limits error logging to protect against UI thread starvation (S-11).
+- 🧹 **Network Stealth & Port Cleanup**: Disables background beacon broadcasts when receiver is idle (S-15), and removes ADB tunnels upon disconnection (S-16).
 
 ---
 
@@ -40,11 +38,11 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 - **1 Single Executable, 1 Single APK**: No .NET installation required, no Android Studio or SDK required.
 - **Embedded ADB**: USB low-latency mode works automatically without needing command-line tools.
-- **1-Click Virtual Cable Setup**: Built-in free driver installer helper right inside the desktop interface.
+- **1-Click Virtual Cable Setup**: Direct guidance to official signed vendor drivers right inside the desktop interface.
 - **Hardware Rack Console UI**: Built with a 24-segment discrete LED ladder VU meter, ballistic decay, decibel readout, and live ON AIR tally.
 - **Tri-Mode Connectivity**:
-  - **Wi-Fi**: Automatic subnet beacon discovery (`UDP 49150/49152`).
-  - **USB Cable**: Hardware ADB tunnel with ultra-low **~5ms latency**.
+  - **Wi-Fi**: Automatic subnet beacon discovery (`UDP 49150/49152`) with Client IP Pinning.
+  - **USB Cable**: Hardware ADB tunnel with ultra-low **~5ms latency** bound strictly to loopback.
   - **Bluetooth**: Direct RFCOMM streaming without needing a local Wi-Fi router.
 - **WASAPI Shared Mode Engine**: Native Windows Audio Session API eliminates driver crashes and supports all multi-channel devices.
 - **Studio Audio Quality**: 48,000 Hz, 16-bit PCM lossless stereo duplication with hardware noise suppression & echo cancellation.
@@ -55,15 +53,15 @@ Works out of the box with **Discord**, **OBS Studio**, **Zoom**, **Audacity**, a
 
 ### Step 1: Download the Files
 Grab the latest release from the **[Releases Page](https://github.com/FuziwaraDesu67/EZmic/releases/latest)**:
-- 💻 **Windows PC**: [**Download EZmic-v1.1.4-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4-win64.exe) *(Single-file standalone, zero setup)*
-- 📱 **Android Phone**: [**Download EZmic-v1.1.4.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.4/EZmic-v1.1.4.apk) *(Native app, high quality)*
+- 💻 **Windows PC**: [**Download EZmic-v1.1.5-win64.exe**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5-win64.exe) *(Single-file standalone, zero setup)*
+- 📱 **Android Phone**: [**Download EZmic-v1.1.5.apk**](https://github.com/FuziwaraDesu67/EZmic/releases/download/v1.1.5/EZmic-v1.1.5.apk) *(Native app, high quality)*
 
 *(All versions available on the **[Releases](https://github.com/FuziwaraDesu67/EZmic/releases)** tab)*
 
 ### Step 2: Open EZmic PC
-1. Double-click `EZmic-v1.1.4-win64.exe` (or the `EZmic` shortcut on your Desktop).
+1. Double-click `EZmic-v1.1.5-win64.exe` (or the `EZmic` shortcut on your Desktop).
 2. If you don't already have a virtual audio cable, the app will show a yellow banner:  
-   👉 Click **"Install Free Cable"** (it downloads and installs VB-Audio Cable automatically in 10 seconds).
+   👉 Click **"Get VB-CABLE"** (opens official portal to install certified driver).
 3. Select your desired connection mode (**Wi-Fi**, **USB**, or **Bluetooth**) and click **Start receiver**.
 
 ### Step 3: Start Streaming on Phone
@@ -85,15 +83,9 @@ In Discord / OBS / Game Audio Settings:
 
 | Mode | Latency | Stability | Ideal Use Case |
 |---|---|---|---|
-| **USB (ADB)** | **~5 ms** | 100% Rock-Solid | Gaming, competitive voice chat, live streaming |
-| **Wi-Fi** | ~15–25 ms | Excellent | Wireless freedom across your room/desk |
-| **Bluetooth** | ~35–50 ms | High | On-the-go or when no Wi-Fi router is available |
-
-### Enabling USB Mode (5ms Latency)
-1. On your Android phone, go to **Settings** > **About phone** > tap **Build number** 7 times to enable Developer Options.
-2. Go to **Settings** > **Developer options** > enable **USB debugging**.
-3. Connect your phone with a USB cable. When prompted *"Allow USB debugging?"*, tap **Allow** (check *"Always allow"*).
-4. That's it! The PC companion detects your phone automatically.
+| **USB (ADB)** | **~5 ms** | 100% Rock-Solid (Loopback isolated) | Gaming, competitive voice chat, live streaming |
+| **Wi-Fi** | ~15–25 ms | Excellent (Client IP Pinned) | Wireless freedom across your room/desk |
+| **Bluetooth** | ~35–50 ms | High (Secure RFCOMM Service) | On-the-go or when no Wi-Fi router is available |
 
 ---
 
@@ -108,9 +100,10 @@ In Discord / OBS / Game Audio Settings:
   ┌─────────────┼─────────────┐
   ▼             ▼             ▼
 Wi-Fi UDP    USB ADB TCP   Bluetooth RFCOMM
-(Port 49152) (Port 49153)  (Custom GUID)
-  │             │             │
-  └─────────────┼─────────────┘
+(Port 49152) (Port 49153)  (Dedicated UUID)
+(IP Pinned)  (127.0.0.1)          │
+  │             │                 │
+  └─────────────┼─────────────────┘
                 │
                 ▼
 [ Windows Mic Companion (WASAPI Shared) ]
@@ -124,18 +117,12 @@ Wi-Fi UDP    USB ADB TCP   Bluetooth RFCOMM
 [ Discord / OBS / Steam Games / Zoom ]
 ```
 
-### Protocol Specification
-- **Magic Header**: `0x4D494331` (`"MIC1"`)
-- **Header Structure**: 12-byte binary header (`Magic`, `SequenceNumber`, `TimestampMs`, `CodecType`, `Flags`, `PayloadLength`).
-- **Framing**: 20ms audio frames (960 samples @ 48kHz).
-- **Format**: 16-bit Little-Endian Mono PCM automatically upmixed to Stereo `(L, R)` pairs in Windows WASAPI to match virtual soundcards.
-
 ---
 
 ## 🛠️ Building from Source
 
 ### Windows Companion
-Requirements: .NET 8 SDK
+Requirements: .NET 8 / 9 SDK
 ```powershell
 cd windows/MicCompanion
 # Single-file standalone publish

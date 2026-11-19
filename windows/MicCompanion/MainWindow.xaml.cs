@@ -90,7 +90,8 @@ public partial class MainWindow : Window
         ChkStartup.IsChecked = StartupHelper.IsRunAtStartup();
         UpdateLiquidIndicatorPosition(false);
         _meterTimer.Start();
-        _discoveryService.Start();
+        // Security (S-15): Do not broadcast discovery beacon while receiver is idle.
+        // DiscoveryService is only started when the user activates Wi-Fi receiver.
 
         // Display local Wi-Fi IP for effortless pairing
         TxtLanIp.Text = DiscoveryService.GetPrimaryLanIp();
@@ -262,22 +263,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void BtnInstallDriver_Click(object sender, RoutedEventArgs e)
+    private void BtnInstallDriver_Click(object sender, RoutedEventArgs e)
     {
-        BtnInstallDriver.IsEnabled = false;
-        BtnInstallDriver.Content = "Installing...";
-        AppendLog("Beginning automatic Virtual Audio Cable installation...");
-
-        bool success = await DriverInstaller.DownloadAndInstallCableAsync(AppendLog);
-
-        PopulateOutputDevices();
-        BtnInstallDriver.IsEnabled = true;
-        BtnInstallDriver.Content = "Install Free Cable";
-
-        if (success)
-        {
-            AppendLog("Virtual Audio Cable installation completed!");
-        }
+        DriverInstaller.OpenOfficialDownloadPage(AppendLog);
     }
 
     private async void BtnConnect_Click(object sender, RoutedEventArgs e)
@@ -468,6 +456,7 @@ public partial class MainWindow : Window
         }
 
         _audioManager.Stop();
+        _discoveryService.Stop(); // Ensure beacon broadcast ceases when receiver is stopped (S-15)
 
         _isStarted = false;
         CmbOutputDevices.IsEnabled = true;

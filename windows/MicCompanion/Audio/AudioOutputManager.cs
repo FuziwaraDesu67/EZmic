@@ -23,6 +23,7 @@ public class AudioOutputManager : IDisposable
     private readonly PcmAudioProcessor _processor;
     private OpusAudioDecoder? _opusDecoder;
     private readonly object _audioLock = new();
+    private DateTime _lastDecodeErrorLog = DateTime.MinValue;
 
     public event Action<float>? LevelChanged;
     public event Action<string>? LogMessage;
@@ -185,9 +186,14 @@ public class AudioOutputManager : IDisposable
             }
             else
             {
-                int sampleCount = packet.Payload.Length / 2;
+                if (packet.Payload == null || packet.Payload.Length < 2)
+                    return;
+
+                // Security (S-11): Ensure byte count is strictly even for 16-bit PCM before copying
+                int validBytes = packet.Payload.Length - (packet.Payload.Length % 2);
+                int sampleCount = validBytes / 2;
                 samples = new short[sampleCount];
-                Buffer.BlockCopy(packet.Payload, 0, samples, 0, packet.Payload.Length);
+                Buffer.BlockCopy(packet.Payload, 0, samples, 0, validBytes);
             }
 
             if (packet.IsMuted)
@@ -216,7 +222,12 @@ public class AudioOutputManager : IDisposable
         }
         catch (Exception ex)
         {
-            LogMessage?.Invoke($"Audio packet decode error: {ex.Message}");
+            DateTime now = DateTime.UtcNow;
+            if ((now - _lastDecodeErrorLog).TotalSeconds > 2)
+            {
+                _lastDecodeErrorLog = now;
+                LogMessage?.Invoke($"Audio packet decode error: {ex.Message}");
+            }
         }
     }
 
