@@ -659,13 +659,25 @@
 
                 <!-- Check for Updates Action & Version Badge -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.5" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.6" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                     <Button x:Name="BtnCheckUpdates" Content="Check for updates" Background="Transparent" Foreground="#8B949E" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnCheckUpdates_Click">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter Property="Foreground" Value="#10B981"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <TextBlock Text="•" FontSize="11" Foreground="#4A5568" Margin="6,0,6,0"/>
+                    <Button x:Name="BtnUninstall" Content="Uninstall" Background="Transparent" Foreground="#64748B" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnUninstall_Click" ToolTip="Cleanly remove EZmic shortcuts and cached data from PC">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#EF4444"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>

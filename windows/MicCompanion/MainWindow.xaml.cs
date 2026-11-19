@@ -747,6 +747,20 @@ public partial class MainWindow : Window
         BtnCheckUpdates.Content = "Check for updates";
     }
 
+    private void BtnUninstall_Click(object sender, RoutedEventArgs e)
+    {
+        var result = System.Windows.MessageBox.Show(
+            "Are you sure you want to completely uninstall EZmic?\n\nThis will remove:\n• Desktop & Start Menu shortcuts\n• Auto-startup configuration\n• Temporary cached files and ADB tools (%LOCALAPPDATA%\\MicToPC)\n• The EZmic executable\n\nDo you want to proceed?",
+            "Uninstall EZmic",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            UninstallHelper.UninstallAndSelfDelete();
+        }
+    }
+
     private async Task CheckForUpdatesBackgroundAsync(bool silent)
     {
         try
