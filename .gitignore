@@ -23,10 +23,14 @@ captures/
 # OS / Misc
 tools/
 dist/
+/*.exe
+/*.apk
 release/*.exe
 release/*.pdb
 release/*.zip
 release/*.apk
+release/*.md
+windows/MicCompanion/Resources/driver.zip
 Thumbs.db
 ehthumbs.db
 Desktop.ini

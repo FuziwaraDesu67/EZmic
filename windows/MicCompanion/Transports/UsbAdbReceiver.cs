@@ -148,26 +148,58 @@ public class UsbAdbReceiver : IAudioTransport
 
     private async Task ReadStreamLoopAsync(NetworkStream stream, CancellationToken token)
     {
-        byte[] headerBuffer = new byte[PacketConstants.HeaderSize];
+        byte[] initialHeader = new byte[PacketConstants.HeaderSize];
 
         while (!token.IsCancellationRequested)
         {
+            // Security (EZMIC-VULN-USB-LOOPBACK-HIJACK):
+            // Enforce a 5-second initial read timeout so unauthenticated/idle local connections
+            // cannot occupy the loopback port and block the legitimate phone ADB connection.
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token, timeoutCts.Token);
+
             int headerRead = 0;
             while (headerRead < PacketConstants.HeaderSize)
             {
-                int read = await stream.ReadAsync(headerBuffer.AsMemory(headerRead, PacketConstants.HeaderSize - headerRead), token);
+                int read = await stream.ReadAsync(initialHeader.AsMemory(headerRead, PacketConstants.HeaderSize - headerRead), linkedCts.Token);
                 if (read == 0) return; // Disconnected
                 headerRead += read;
             }
 
-            ushort payloadLen = (ushort)((headerBuffer[10] << 8) | headerBuffer[11]);
-            byte[] fullPacket = new byte[PacketConstants.HeaderSize + payloadLen];
-            Buffer.BlockCopy(headerBuffer, 0, fullPacket, 0, PacketConstants.HeaderSize);
+            uint magic = System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(initialHeader.AsSpan(0, 4));
+            if (magic != PacketConstants.Magic && magic != PacketConstants.MagicV2)
+            {
+                LogMessage?.Invoke("[Security] Disconnected unauthorized local connection on USB port (Invalid magic header).");
+                return;
+            }
+
+            int headerSize = (magic == PacketConstants.MagicV2) ? PacketConstants.HeaderSizeV2 : PacketConstants.HeaderSize;
+            byte[] fullHeader = new byte[headerSize];
+            Buffer.BlockCopy(initialHeader, 0, fullHeader, 0, PacketConstants.HeaderSize);
+
+            if (headerSize > PacketConstants.HeaderSize)
+            {
+                int extraRead = 0;
+                int needed = headerSize - PacketConstants.HeaderSize;
+                while (extraRead < needed)
+                {
+                    int r = await stream.ReadAsync(fullHeader.AsMemory(PacketConstants.HeaderSize + extraRead, needed - extraRead), linkedCts.Token);
+                    if (r == 0) return;
+                    extraRead += r;
+                }
+            }
+
+            ushort payloadLen = (magic == PacketConstants.MagicV2)
+                ? System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(fullHeader.AsSpan(14, 2))
+                : System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(fullHeader.AsSpan(10, 2));
+
+            byte[] fullPacket = new byte[headerSize + payloadLen];
+            Buffer.BlockCopy(fullHeader, 0, fullPacket, 0, headerSize);
 
             int payloadRead = 0;
             while (payloadRead < payloadLen)
             {
-                int read = await stream.ReadAsync(fullPacket.AsMemory(PacketConstants.HeaderSize + payloadRead, payloadLen - payloadRead), token);
+                int read = await stream.ReadAsync(fullPacket.AsMemory(headerSize + payloadRead, payloadLen - payloadRead), token);
                 if (read == 0) return;
                 payloadRead += read;
             }

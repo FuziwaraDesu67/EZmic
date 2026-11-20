@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
     private var micService: MicForegroundService? = null
     private var isBound = false
     private val localState = MutableStateFlow(StreamingState())
+    private var currentWifiToken: Long = 0L
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -81,7 +82,7 @@ class MainActivity : ComponentActivity() {
                     pairedDevices = pairedDevices,
                     onStartWifi = { ip, port, useOpus, ns, aec, isStereo ->
                         ensureServiceStarted()
-                        val transmitter = WifiTransmitter(targetIp = ip, targetPort = port)
+                        val transmitter = WifiTransmitter(targetIp = ip, targetPort = port, sessionToken = currentWifiToken)
                         micService?.startStreaming(transmitter, useOpus, ns, aec, isStereo)
                     },
                     onStartUsb = { port, useOpus, ns, aec, isStereo ->
@@ -109,6 +110,7 @@ class MainActivity : ComponentActivity() {
                             val beacon = DiscoveryBeacon(this@MainActivity)
                             val discovered = beacon.discoverPc(timeoutMs = 4000)
                             if (discovered != null) {
+                                currentWifiToken = discovered.token
                                 onFound(discovered.ip, discovered.port, discovered.name)
                                 Toast.makeText(this@MainActivity, "Found: ${discovered.name} (${discovered.ip})", Toast.LENGTH_SHORT).show()
                             } else {

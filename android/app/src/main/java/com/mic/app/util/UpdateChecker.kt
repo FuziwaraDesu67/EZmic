@@ -17,7 +17,7 @@ data class AppUpdateInfo(
 )
 
 object UpdateChecker {
-    const val CURRENT_VERSION = "v1.1.6"
+    const val CURRENT_VERSION = "v1.1.8"
     private const val REPO_OWNER = "FuziwaraDesu67"
     private const val REPO_NAME = "EZmic"
     private const val API_URL = "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
@@ -38,19 +38,42 @@ object UpdateChecker {
     suspend fun check(context: Context? = null): AppUpdateInfo? = withContext(Dispatchers.IO) {
         try {
             val appVer = getAppVersion(context)
-            val url = URL(API_URL)
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 8000
-                readTimeout = 8000
-                setRequestProperty("User-Agent", "EZmic-Android-Updater")
-                setRequestProperty("Accept", "application/vnd.github.v3+json")
+            var currentUrl = API_URL
+            var connection: HttpURLConnection? = null
+            var redirects = 0
+
+            while (redirects < 5) {
+                val url = URL(currentUrl)
+                connection = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                    instanceFollowRedirects = true
+                    setRequestProperty("User-Agent", "EZmic-Android-Updater")
+                    setRequestProperty("Accept", "application/vnd.github.v3+json")
+                }
+
+                val code = connection.responseCode
+                if (code in 301..308) {
+                    val loc = connection.getHeaderField("Location")
+                    connection.disconnect()
+                    if (loc.isNullOrBlank()) return@withContext null
+                    currentUrl = loc
+                    redirects++
+                    continue
+                }
+
+                if (code != 200) {
+                    connection.disconnect()
+                    return@withContext null
+                }
+                break
             }
 
-            if (connection.responseCode != 200) return@withContext null
+            val conn = connection ?: return@withContext null
+            val jsonString = conn.inputStream.bufferedReader().use { it.readText() }
+            conn.disconnect()
 
-            val jsonString = connection.inputStream.bufferedReader().use { it.readText() }
             val root = JSONObject(jsonString)
-
             val tagName = root.optString("tag_name", "")
             val name = root.optString("name", tagName)
             val body = root.optString("body", "")
@@ -88,7 +111,7 @@ object UpdateChecker {
         }
     }
 
-    private fun isNewer(latest: String, current: String): Boolean {
+    fun isNewer(latest: String, current: String): Boolean {
         if (latest.isBlank()) return false
         val cleanL = latest.trimStart('v', 'V').trim()
         val cleanC = current.trimStart('v', 'V').trim()

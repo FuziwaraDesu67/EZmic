@@ -70,7 +70,20 @@ public class WifiAudioReceiver : IAudioTransport
                 if (packet == null)
                     continue;
 
-                // 3. Client IP Pinning & Session Lock enforcement (Neutralizes S-03)
+                // 3. Security (EZMIC-VULN-WIFI-SPOOFED-LOCKOUT): Authenticated Session Token Verification
+                // Packets must present the valid ephemeral session token generated during discovery.
+                // Unauthenticated packets are discarded immediately without altering session lock state.
+                uint activeToken = DiscoveryService.ActiveSessionToken;
+                if (activeToken != 0)
+                {
+                    if (packet.Magic != PacketConstants.MagicV2 || packet.SessionToken != activeToken)
+                    {
+                        LogRateLimitedSecurityWarning(senderIp, "Rejected packet with invalid or missing session token");
+                        continue;
+                    }
+                }
+
+                // 4. Client IP Pinning & Session Lock enforcement
                 DateTime now = DateTime.UtcNow;
                 if (_lockedSenderIp == null)
                 {
@@ -80,8 +93,8 @@ public class WifiAudioReceiver : IAudioTransport
                 }
                 else if (!_lockedSenderIp.Equals(senderIp))
                 {
-                    // Allow session handover only if previous client has been idle/silent for > 8 seconds
-                    if ((now - _lastAuthorizedPacketTime).TotalSeconds > 8)
+                    // Allow fast session handover if previous client has been idle/silent for > 2.5 seconds
+                    if ((now - _lastAuthorizedPacketTime).TotalSeconds > 2.5)
                     {
                         var oldIp = _lockedSenderIp;
                         _lockedSenderIp = senderIp;

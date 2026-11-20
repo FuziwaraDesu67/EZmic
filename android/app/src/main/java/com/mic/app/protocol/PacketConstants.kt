@@ -3,8 +3,10 @@ package com.mic.app.protocol
 import java.util.UUID
 
 object PacketConstants {
-    const val MAGIC: Int = 0x4D494331 // "MIC1"
+    const val MAGIC: Int = 0x4D494331 // "MIC1" (Legacy V1)
+    const val MAGIC_V2: Int = 0x4D494332 // "MIC2" (Authenticated V2)
     const val HEADER_SIZE: Int = 12
+    const val HEADER_SIZE_V2: Int = 16
 
     const val CODEC_OPUS: Byte = 0x01
     const val CODEC_PCM: Byte = 0x02

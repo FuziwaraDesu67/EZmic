@@ -2,8 +2,10 @@ namespace MicCompanion.Protocol;
 
 public static class PacketConstants
 {
-    public const uint Magic = 0x4D494331; // "MIC1"
+    public const uint Magic = 0x4D494331; // "MIC1" (Legacy V1)
+    public const uint MagicV2 = 0x4D494332; // "MIC2" (Authenticated V2)
     public const int HeaderSize = 12;
+    public const int HeaderSizeV2 = 16;
 
     public const byte CodecOpus = 0x01;
     public const byte CodecPcm = 0x02;

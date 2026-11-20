@@ -5,26 +5,29 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val ChassisBackground = Color(0xFF0D0E12)
-val PanelSurface = Color(0xFF14161C)
-val ControlWell = Color(0xFF1A1D24)
-val BorderHairline = Color(0xFF222630)
-val BorderSubtle = Color(0xFF2B303C)
+// Figma Stealth Obsidian & Vibrant Mint Palette
+val ChassisBackground = Color(0xFF0C0E11)
+val PanelSurface = Color(0xFF16191D)
+val ControlWell = Color(0xFF1E2227)
+val BorderHairline = Color(0xFF212529)
+val BorderSubtle = Color(0xFF282D35)
 
-val TextPrimary = Color(0xFFE6EDF3)
-val TextSecondary = Color(0xFF8B949E)
-val TextMuted = Color(0xFF484F58)
+val TextPrimary = Color(0xFFFFFFFF)
+val TextSecondary = Color(0xFF8E959E)
+val TextMuted = Color(0xFF5A626A)
 
-val StudioGreen = Color(0xFF10B981)
+val StudioMint = Color(0xFF2EE59D)
+val StudioGreen = Color(0xFF2EE59D)
 val StudioAmber = Color(0xFFF59E0B)
 val StudioRed = Color(0xFFEF4444)
+val StudioDarkMintBg = Color(0xFF0B281E)
 
 private val StudioHardwareColors = darkColorScheme(
-    primary = StudioGreen,
+    primary = StudioMint,
     background = ChassisBackground,
     surface = PanelSurface,
     error = StudioRed,
-    onPrimary = Color(0xFF042F1E),
+    onPrimary = Color(0xFF091E16),
     onBackground = TextPrimary,
     onSurface = TextPrimary
 )

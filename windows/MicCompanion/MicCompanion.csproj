@@ -10,10 +10,10 @@
     <AssemblyTitle>EZmic</AssemblyTitle>
     <AssemblyName>EZmic</AssemblyName>
     <AssemblyDescription>Turn your phone into a PC microphone</AssemblyDescription>
-    <Version>1.1.6</Version>
-    <InformationalVersion>1.1.6</InformationalVersion>
-    <AssemblyVersion>1.1.6.0</AssemblyVersion>
-    <FileVersion>1.1.6.0</FileVersion>
+    <Version>1.1.8</Version>
+    <InformationalVersion>1.1.8</InformationalVersion>
+    <AssemblyVersion>1.1.8.0</AssemblyVersion>
+    <FileVersion>1.1.8.0</FileVersion>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\adb\*" />
+    <EmbeddedResource Include="Resources\driver.zip" />
   </ItemGroup>
 
   <ItemGroup>

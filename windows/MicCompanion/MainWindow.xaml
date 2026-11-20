@@ -3,26 +3,67 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="EZmic" 
         Icon="Assets/icon.png"
-        Height="740" Width="490"
-        MinHeight="560" MinWidth="440"
+        Height="780" Width="430"
+        MinHeight="680" MinWidth="420"
         WindowStartupLocation="CenterScreen"
-        Background="#0D0E12" Foreground="#E6EDF3">
+        Background="#0C0E11" Foreground="#FFFFFF"
+        UseLayoutRounding="True">
 
     <Window.Resources>
-        <!-- Minimalist Dark ScrollBar Style -->
-        <Style TargetType="ScrollBar">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Width" Value="6"/>
+        <!-- Modern Stealth Palette -->
+        <SolidColorBrush x:Key="WindowBg" Color="#0C0E11"/>
+        <SolidColorBrush x:Key="CardBg" Color="#16191D"/>
+        <SolidColorBrush x:Key="BorderDark" Color="#1E2228"/>
+        <SolidColorBrush x:Key="TextWhite" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextGray" Color="#8E959E"/>
+        <SolidColorBrush x:Key="TextDarkMuted" Color="#5A626A"/>
+        <SolidColorBrush x:Key="MintAccent" Color="#2EE59D"/>
+        <SolidColorBrush x:Key="MintDarkBg" Color="#0B281E"/>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI, sans-serif"/>
+            <Setter Property="Foreground" Value="{StaticResource TextWhite}"/>
+        </Style>
+
+        <!-- Modern Mint Slider Style with White Circular Thumb -->
+        <Style x:Key="FigmaMintSlider" TargetType="Slider">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="Transparent">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Border Height="4" CornerRadius="2" Background="#22262E"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.DecreaseLarge}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4" CornerRadius="2" Background="{StaticResource MintAccent}"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.IncreaseLarge}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4" CornerRadius="2" Background="Transparent"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
                                 <Track.Thumb>
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#2D3342" CornerRadius="3" Margin="1,0"/>
+                                                <Ellipse Width="16" Height="16" Fill="#FFFFFF">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.3"/>
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
@@ -33,95 +74,94 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- Typography & Shared Hardware Palette -->
-        <SolidColorBrush x:Key="ChassisBg" Color="#0D0E12"/>
-        <SolidColorBrush x:Key="PanelBg" Color="#14161C"/>
-        <SolidColorBrush x:Key="ControlBg" Color="#1A1D24"/>
-        <SolidColorBrush x:Key="ControlHover" Color="#222630"/>
-        <SolidColorBrush x:Key="BorderSubtle" Color="#262A33"/>
-        <SolidColorBrush x:Key="BorderHairline" Color="#1E222A"/>
-        <SolidColorBrush x:Key="TextPrimary" Color="#E6EDF3"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#8B949E"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#484F58"/>
-        <SolidColorBrush x:Key="AccentGreen" Color="#10B981"/>
-        <SolidColorBrush x:Key="AccentAmber" Color="#F59E0B"/>
-        <SolidColorBrush x:Key="AccentRed" Color="#EF4444"/>
 
-        <Style TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI, -apple-system, sans-serif"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <!-- Modern Toggle Switch (Mint ON / Gray OFF) -->
+        <Style x:Key="FigmaToggleSwitch" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="SwitchBorder" Width="40" Height="22" CornerRadius="11" Background="#22262E" Padding="2" SnapsToDevicePixels="True">
+                            <Ellipse x:Name="SwitchKnob" Width="18" Height="18" Fill="#FFFFFF" HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="SwitchBorder" Property="Background" Value="{StaticResource MintAccent}"/>
+                                <Setter TargetName="SwitchKnob" Property="Fill" Value="#091E16"/>
+                                <Setter TargetName="SwitchKnob" Property="HorizontalAlignment" Value="Right"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <!-- Segmented Hardware Button -->
-        <Style x:Key="HardwareButton" TargetType="Button">
-            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI, sans-serif"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="16,10"/>
-            <Setter Property="Background" Value="#1E222A"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
+        <!-- DSP Chip Pill Toggle -->
+        <Style x:Key="FigmaDspChip" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border x:Name="ChipBorder" CornerRadius="16" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" Padding="16,7">
+                            <ContentPresenter x:Name="ChipText" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.Foreground>
+                                    <SolidColorBrush Color="#707782"/>
+                                </TextBlock.Foreground>
+                            </ContentPresenter>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ChipBorder" Property="Background" Value="{StaticResource MintDarkBg}"/>
+                                <Setter TargetName="ChipBorder" Property="BorderBrush" Value="{StaticResource MintAccent}"/>
+                                <Setter TargetName="ChipText" Property="TextElement.Foreground" Value="{StaticResource MintAccent}"/>
+                                <Setter TargetName="ChipText" Property="TextElement.FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Segmented Dock Tab Button (Zero Default Chrome / No Blue Hover) -->
+        <Style x:Key="SegmentedDockButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="8" 
-                                Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Border" Background="Transparent" BorderThickness="0" CornerRadius="9">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource ControlHover}"/>
-                    <Setter Property="BorderBrush" Value="#383E4B"/>
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#15181E"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
-        <!-- Primary Broadcast Button -->
-        <Style x:Key="BroadcastButton" TargetType="Button" BasedOn="{StaticResource HardwareButton}">
-            <Setter Property="Background" Value="#10B981"/>
-            <Setter Property="Foreground" Value="#042F1E"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#059669"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- ComboBox Item Dark Styling -->
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#141720"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="BorderThickness" Value="0"/>
+        <!-- Figma Dark ComboBoxItem Style -->
+        <Style x:Key="FigmaComboBoxItem" TargetType="ComboBoxItem">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" Margin="2,1" CornerRadius="6">
+                        <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="6" Padding="12,8" Margin="3,1">
                             <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#222836"/>
-                                <Setter Property="Foreground" Value="#10B981"/>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#22262E"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#182E24"/>
-                                <Setter Property="Foreground" Value="#10B981"/>
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource MintDarkBg}"/>
+                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource MintAccent}"/>
+                                <Setter TargetName="ItemBorder" Property="BorderThickness" Value="1"/>
+                                <Setter Property="Foreground" Value="{StaticResource MintAccent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -129,563 +169,384 @@
             </Setter>
         </Style>
 
-        <!-- ComboBox Toggle Button Template -->
-        <ControlTemplate x:Key="ComboBoxToggleButton" TargetType="{x:Type ToggleButton}">
-            <Border x:Name="TemplateRoot" 
-                    Background="#161922" 
-                    BorderBrush="#262A33" 
-                    BorderThickness="1" 
-                    CornerRadius="8"
-                    Padding="{TemplateBinding Padding}">
+        <!-- ToggleButton for Dark ComboBox -->
+        <ControlTemplate x:Key="FigmaComboBoxToggleButton" TargetType="ToggleButton">
+            <Border x:Name="ToggleBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="28"/>
                     </Grid.ColumnDefinitions>
-                    <!-- Down Chevron Arrow -->
-                    <Path x:Name="Arrow" 
-                          Grid.Column="1" 
-                          HorizontalAlignment="Center" 
-                          VerticalAlignment="Center" 
-                          Data="M 0 0 L 4 4 L 8 0" 
-                          Stroke="#8B949E" 
-                          StrokeThickness="1.5"/>
+                    <Path x:Name="Arrow" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="{StaticResource TextGray}" Data="M 0 0 L 4 4 L 8 0 Z"/>
                 </Grid>
             </Border>
             <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="TemplateRoot" Property="Background" Value="#1E2330"/>
-                    <Setter TargetName="TemplateRoot" Property="BorderBrush" Value="#383E4B"/>
-                    <Setter TargetName="Arrow" Property="Stroke" Value="#E6EDF3"/>
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter TargetName="TemplateRoot" Property="BorderBrush" Value="#10B981"/>
-                    <Setter TargetName="Arrow" Property="Stroke" Value="#10B981"/>
+                    <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource MintAccent}"/>
                 </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
 
-        <!-- ComboBox Dark Styling -->
-        <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#161922"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="BorderBrush" Value="#262A33"/>
+        <!-- Figma Dark ComboBox Style -->
+        <Style x:Key="FigmaComboBox" TargetType="ComboBox">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="#1E2228"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource FigmaComboBoxItem}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
-                        <Grid x:Name="MainGrid" SnapsToDevicePixels="True">
-                            <!-- Toggle Button acting as ComboBox header -->
-                            <ToggleButton x:Name="ToggleButton" 
-                                          Template="{StaticResource ComboBoxToggleButton}" 
-                                          Focusable="False" 
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                        <Grid>
+                            <ToggleButton Name="ToggleButton" 
+                                          Template="{StaticResource FigmaComboBoxToggleButton}" 
+                                          Focusable="false"
+                                          IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" 
                                           ClickMode="Press"
-                                          Padding="{TemplateBinding Padding}"/>
-                            
-                            <!-- Selected Content Presenter -->
-                            <ContentPresenter x:Name="ContentSite" 
-                                              IsHitTestVisible="False" 
-                                              Content="{TemplateBinding SelectionBoxItem}" 
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
-                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
-                                              Margin="{TemplateBinding Padding}" 
-                                              VerticalAlignment="Center" 
-                                              HorizontalAlignment="Left">
-                                <ContentPresenter.Resources>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-                                    </Style>
-                                </ContentPresenter.Resources>
-                            </ContentPresenter>
-                            
-                            <!-- Dropdown Popup -->
-                            <Popup x:Name="Popup" 
-                                   Placement="Bottom" 
-                                   IsOpen="{TemplateBinding IsDropDownOpen}" 
-                                   AllowsTransparency="True" 
-                                   Focusable="False" 
-                                   PopupAnimation="Slide"
-                                   VerticalOffset="4">
-                                <Border x:Name="DropDownBorder" 
-                                        MinWidth="{Binding ActualWidth, ElementName=MainGrid}" 
-                                        MaxHeight="{TemplateBinding MaxDropDownHeight}" 
-                                        Background="#141720" 
-                                        BorderBrush="#262A33" 
-                                        BorderThickness="1" 
-                                        CornerRadius="8"
-                                        Padding="4">
-                                    <Border.Effect>
-                                        <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.6"/>
-                                    </Border.Effect>
-                                    <ScrollViewer SnapsToDevicePixels="True">
-                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
-                                    </ScrollViewer>
-                                </Border>
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"/>
+                            <ContentPresenter Name="ContentSite" IsHitTestVisible="False"  
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="12,0,28,0" 
+                                              VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" SnapsToDevicePixels="True" 
+                                      MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder" Background="#16191D" BorderThickness="1" BorderBrush="{StaticResource BorderDark}" CornerRadius="8" Margin="0,4,0,4">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="12" Direction="270" ShadowDepth="4" Opacity="0.5"/>
+                                        </Border.Effect>
+                                        <ScrollViewer Margin="2,4" SnapsToDevicePixels="True">
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Grid>
                             </Popup>
                         </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="HasItems" Value="False">
-                                <Setter TargetName="DropDownBorder" Property="Height" Value="95"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
-        <!-- Liquid Glass Dock Item Button -->
-        <Style x:Key="LiquidDockItem" TargetType="Button">
+        <!-- Figma Card ComboBox (Transparent background for Card headers) -->
+        <Style x:Key="FigmaCardComboBox" TargetType="ComboBox" BasedOn="{StaticResource FigmaComboBox}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="18">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#12FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
     </Window.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-        <Grid Margin="18,14">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- 0: Dynamic Update Banner -->
-                <RowDefinition Height="Auto"/> <!-- 1: Header & Tally -->
-                <RowDefinition Height="Auto"/> <!-- 2: Transport Liquid Dock & LAN IP -->
-                <RowDefinition Height="Auto"/> <!-- 3: Audio Endpoint -->
-                <RowDefinition Height="Auto"/> <!-- 4: Precision LED Meter -->
-                <RowDefinition Height="Auto"/> <!-- 5: Gain, Noise Gate & Sidetone Controls -->
-                <RowDefinition Height="Auto"/> <!-- 6: Compact Activity Log -->
-                <RowDefinition Height="Auto"/> <!-- 7: Footer Options -->
-                <RowDefinition Height="Auto"/> <!-- 8: GitHub Profile Attribution -->
-            </Grid.RowDefinitions>
+    <Grid>
+        <!-- ========================================== -->
+        <!-- SCREEN 1: EZmic / Main (Default Screen)    -->
+        <!-- ========================================== -->
+        <ScrollViewer x:Name="GridMainView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,20,24,20">
 
-        <!-- 0. Dynamic Update Notification Pop-up Banner -->
-        <Border x:Name="BorderUpdateBanner" Grid.Row="0" Background="#14231E" BorderBrush="#10B981" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,12" Visibility="Collapsed">
-            <StackPanel>
-                <Grid>
+                <!-- 1. Header: EZmic + Standby status + Three-dot Settings -->
+                <Grid Margin="0,0,0,18">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="🚀" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtUpdateTitle" Text="New update available: v1.1" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <Button x:Name="BtnDismissUpdate" Content="✕" Grid.Column="1" Background="Transparent" Foreground="#8B949E" BorderThickness="0" Cursor="Hand" Click="BtnDismissUpdate_Click" Padding="4,0" FontSize="12"/>
-                </Grid>
-                <TextBlock x:Name="TxtUpdateNotes" Text="Low-latency updates, noise gate &amp; hotkey support." FontSize="11" Foreground="#A7F3D0" Margin="22,3,0,8" TextWrapping="Wrap"/>
-
-                <Grid Margin="22,0,0,0">
-                    <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="BtnApplyUpdate" Content="Download &amp; Update" Grid.Column="0" Click="BtnApplyUpdate_Click" Padding="12,4" Height="26" FontSize="11" Background="#10B981" Foreground="#042F1E" FontWeight="Bold" Cursor="Hand" BorderThickness="0"/>
-                    <Button x:Name="BtnViewReleaseNotes" Content="View Release" Grid.Column="1" Click="BtnViewReleaseNotes_Click" Margin="8,0,0,0" Padding="10,4" Height="26" FontSize="11" Background="#1E293B" Foreground="#E2E8F0" FontWeight="Medium" Cursor="Hand" BorderThickness="0"/>
-                    <ProgressBar x:Name="ProgressUpdate" Grid.Column="2" Height="6" VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed" Maximum="100" Foreground="#10B981" Background="#1E293B"/>
+
+                    <!-- Title -->
+                    <TextBlock Text="EZmic" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+
+                    <!-- Status Indicator (Dot + Text) -->
+                    <Border x:Name="BorderTally" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" Padding="6,2">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="DotTally" Width="7" Height="7" Fill="#8B949E" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtTally" Text="Standby" FontSize="13" Foreground="{StaticResource TextGray}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Three-Dot Settings Button -->
+                    <Button x:Name="BtnSettings" Grid.Column="2" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnSettings_Click" Padding="6,2">
+                        <TextBlock Text="•••" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextGray}"/>
+                    </Button>
                 </Grid>
-            </StackPanel>
-        </Border>
 
-        <!-- 1. Header with Live Tally Pill & Buy Me a Coffee -->
-        <Grid Grid.Row="1" Margin="0,0,0,14">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="EZmic" FontSize="20" FontWeight="Bold"/>
-                <TextBlock Text="Studio microphone bridge" FontSize="12" Foreground="{StaticResource TextSecondary}" Margin="0,2,0,0"/>
-            </StackPanel>
-
-            <!-- Top Right Action Controls -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Buy Me A Coffee Support Pill Button -->
-                <Button x:Name="BtnBuyCoffee" Margin="0,0,8,0" Padding="10,5" Cursor="Hand" Click="BtnBuyCoffee_Click" ToolTip="Support development on Buy Me a Coffee (buymeacoffee.com/eaadarsh)">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="Brd" Background="#1A1812" BorderBrush="#854D0E" BorderThickness="1" CornerRadius="12" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Brd" Property="Background" Value="#2D2013"/>
-                                    <Setter TargetName="Brd" Property="BorderBrush" Value="#F59E0B"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="☕" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Buy me a coffee" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
-                <!-- Authentic Broadcast Tally -->
-                <Border x:Name="BorderTally" Background="#14181E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="10,5" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse x:Name="DotTally" Width="7" Height="7" Fill="{StaticResource TextMuted}" Margin="0,0,7,0"/>
-                        <TextBlock x:Name="TxtTally" Text="STANDBY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                    </StackPanel>
+                <!-- Update Available Notification Banner -->
+                <Border x:Name="BorderUpdateBanner" Background="#0E2319" BorderBrush="{StaticResource MintAccent}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,16" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtUpdateTitle" Text="New update available" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource MintAccent}"/>
+                            <TextBlock x:Name="TxtUpdateNotes" Text="Click Update to apply the latest security patches." FontSize="11" Foreground="{StaticResource TextGray}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <Button x:Name="BtnApplyUpdate" Grid.Column="1" Content="Update" Click="BtnApplyUpdate_Click" Background="{StaticResource MintAccent}" Foreground="#091E16" FontWeight="SemiBold" FontSize="11" Padding="12,4" Height="26" Cursor="Hand" BorderThickness="0" Margin="8,0,4,0">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button x:Name="BtnDismissUpdate" Grid.Column="2" Content="✕" Click="BtnDismissUpdate_Click" Background="Transparent" Foreground="{StaticResource TextGray}" FontSize="12" Padding="6,2" Cursor="Hand" BorderThickness="0"/>
+                    </Grid>
                 </Border>
-            </StackPanel>
-        </Grid>
 
-        <!-- 2. Connection Transport Selector (Liquid Glass Dock Slider) -->
-        <Border Grid.Row="2" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="12" Padding="14" Margin="0,0,0,12">
-            <StackPanel>
-                <Grid Margin="0,0,0,10">
-                    <TextBlock Text="Transport" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
-                    <TextBlock x:Name="TxtModeBadge" Text="Wi-Fi Ready" FontSize="10" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right"/>
-                </Grid>
-
-                <!-- Liquid Glass Dock Capsule (Waterline Pill) -->
-                <Border Background="#090D15" BorderThickness="1" CornerRadius="22" Padding="4" Height="46">
-                    <Border.BorderBrush>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#40FFFFFF" Offset="0.0"/>
-                            <GradientStop Color="#10FFFFFF" Offset="1.0"/>
-                        </LinearGradientBrush>
-                    </Border.BorderBrush>
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.5"/>
-                    </Border.Effect>
-
+                <!-- 2. Connection Type Segmented Control (Pill switcher) -->
+                <Border Background="{StaticResource CardBg}" CornerRadius="12" Height="44" Padding="3" Margin="0,0,0,16">
                     <Grid x:Name="DockSliderTrack" SizeChanged="DockSliderTrack_SizeChanged">
-                        <!-- Sliding Liquid Glass Water Drop -->
-                        <Border x:Name="LiquidIndicator"
-                                IsHitTestVisible="False"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Stretch"
-                                CornerRadius="18"
-                                BorderThickness="1">
+                        <!-- Sliding Indicator Pill -->
+                        <Border x:Name="LiquidIndicator" HorizontalAlignment="Left" Background="#22262E" CornerRadius="9">
                             <Border.RenderTransform>
-                                <TranslateTransform x:Name="LiquidTransform" X="0" Y="0"/>
+                                <TranslateTransform x:Name="LiquidTransform" X="0"/>
                             </Border.RenderTransform>
-                            <Border.BorderBrush>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                    <GradientStop Color="#90FFFFFF" Offset="0.0"/>
-                                    <GradientStop Color="#2510B981" Offset="1.0"/>
-                                </LinearGradientBrush>
-                            </Border.BorderBrush>
-                            <Border.Background>
-                                <RadialGradientBrush Center="0.5,0.2" RadiusX="0.8" RadiusY="1.1">
-                                    <GradientStop Color="#38FFFFFF" Offset="0.0"/>
-                                    <GradientStop Color="#2810B981" Offset="0.5"/>
-                                    <GradientStop Color="#140A261A" Offset="1.0"/>
-                                </RadialGradientBrush>
-                            </Border.Background>
-                            <Border.Effect>
-                                <DropShadowEffect Color="#10B981" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
-                            </Border.Effect>
                         </Border>
 
-                        <!-- 3 Transport Items -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Wi-Fi Item -->
-                            <Button x:Name="BtnModeWifi" Grid.Column="0" Tag="WIFI" Style="{StaticResource LiquidDockItem}" Click="BtnMode_Click">
+                        <!-- Tab Buttons -->
+                        <UniformGrid Columns="3">
+                            <Button x:Name="BtnTabWifi" Style="{StaticResource SegmentedDockButton}" Tag="WIFI" Click="BtnMode_Click">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Path x:Name="IconWifi" Width="15" Height="15" Stretch="Uniform" Margin="0,0,8,0"
-                                          Data="M12 18c.8 0 1.5.7 1.5 1.5S12.8 21 12 21s-1.5-.7-1.5-1.5.7-1.5 1.5-1.5zm-5-4.2c2.8-2.4 7.2-2.4 10 0l-1.4 1.4c-2-1.7-5.2-1.7-7.2 0l-1.4-1.4zm-4-4c5-4.3 13-4.3 18 0l-1.4 1.4c-4.2-3.6-11-3.6-15.2 0L3 9.8z"
-                                          Fill="#10B981"/>
+                                    <Path x:Name="IconWifi" Width="13" Height="13" Stretch="Uniform" Fill="{StaticResource MintAccent}" Margin="0,0,6,0"
+                                          Data="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4M2.92 10.42C5.46 8.28 8.61 7 12 7S18.54 8.28 21.08 10.42L12 19.53 2.92 10.42Z"/>
                                     <TextBlock x:Name="TxtWifi" Text="Wi-Fi" FontWeight="Bold" FontSize="13" Foreground="#FFFFFF"/>
                                 </StackPanel>
                             </Button>
-
-                            <!-- USB Item -->
-                            <Button x:Name="BtnModeUsb" Grid.Column="1" Tag="USB" Style="{StaticResource LiquidDockItem}" Click="BtnMode_Click">
+                            <Button x:Name="BtnTabUsb" Style="{StaticResource SegmentedDockButton}" Tag="USB" Click="BtnMode_Click">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Path x:Name="IconUsb" Width="15" Height="15" Stretch="Uniform" Margin="0,0,8,0"
-                                          Data="M15 7v4h1v2h-3V5h2l-3-4-3 4h2v8H8v-2h1V7H5v4h1v3c0 1.1.9 2 2 2h3v3.1c-.6.2-1 .8-1 1.4 0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5c0-.6-.4-1.2-1-1.4V16h3c1.1 0 2-.9 2-2v-3h1V7h-4z"
-                                          Fill="#8B949E"/>
-                                    <TextBlock x:Name="TxtUsb" Text="USB" FontWeight="Medium" FontSize="13" Foreground="#8B949E"/>
+                                    <Path x:Name="IconUsb" Width="13" Height="13" Stretch="Uniform" Fill="{StaticResource TextGray}" Margin="0,0,6,0"
+                                          Data="M15 7V4H16V2H8V4H9V7L7 9V17H11V22H13V17H17V9L15 7M9 15V10.83L10.83 9H13.17L15 10.83V15H9Z"/>
+                                    <TextBlock x:Name="TxtUsb" Text="USB" FontWeight="Medium" FontSize="13" Foreground="{StaticResource TextGray}"/>
                                 </StackPanel>
                             </Button>
-
-                            <!-- Bluetooth Item -->
-                            <Button x:Name="BtnModeBluetooth" Grid.Column="2" Tag="BLUETOOTH" Style="{StaticResource LiquidDockItem}" Click="BtnMode_Click">
+                            <Button x:Name="BtnTabBluetooth" Style="{StaticResource SegmentedDockButton}" Tag="BLUETOOTH" Click="BtnMode_Click">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Path x:Name="IconBluetooth" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0"
-                                          Data="M14.88 16.29L12 13.41V21l4.47-3.58a1 1 0 0 0 .41-1.13zm-2.88-5.7L14.88 7.71a1 1 0 0 0-.41-1.13L10 3v7.59zm-2 0H5v2h5v2.59l4.88 4.88-4.88 3.9V23h2l7-5.6a1 1 0 0 0 .37-.78 1 1 0 0 0-.37-.78L13.41 12l5.47-5.46a1 1 0 0 0 .37-.78 1 1 0 0 0-.37-.78L12 0H10v8.41L5.12 3.54 3.71 4.95 8.76 10H5v2h3.76l-5.05 5.05 1.41 1.41L10 13.41V10.59z"
-                                          Fill="#8B949E"/>
-                                    <TextBlock x:Name="TxtBluetooth" Text="Bluetooth" FontWeight="Medium" FontSize="13" Foreground="#8B949E"/>
+                                    <Path x:Name="IconBluetooth" Width="11" Height="13" Stretch="Uniform" Fill="{StaticResource TextGray}" Margin="0,0,6,0"
+                                          Data="M14.88 16.29L13 18.17V14.41M13 5.83L14.88 7.71L13 9.59M17.71 7.71L12 2H11V10.59L6.41 6L5 7.41L10.59 13L5 18.59L6.41 20L11 15.41V24H12L17.71 18.29L13.41 14L17.71 9.71C18.1 9.32 18.1 8.68 17.71 8.29V8.29C17.71 7.9 17.71 7.71 17.71 7.71Z"/>
+                                    <TextBlock x:Name="TxtBluetooth" Text="Bluetooth" FontWeight="Medium" FontSize="13" Foreground="{StaticResource TextGray}"/>
                                 </StackPanel>
                             </Button>
-                        </Grid>
+                        </UniformGrid>
                     </Grid>
                 </Border>
 
-                <!-- Action Button & Connection Readout -->
-                <Grid Margin="0,14,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Button x:Name="BtnConnect" Content="Start receiver" Style="{StaticResource BroadcastButton}" Width="140" Height="36" Click="BtnConnect_Click" Grid.Column="0"/>
-
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0">
-                        <TextBlock x:Name="TxtStatus" Text="Ready to connect via Wi-Fi" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Wi-Fi LAN IP & Global Hotkey Pill -->
-                <Grid Margin="0,10,0,0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="PC Wi-Fi IP: " FontSize="11" Foreground="{StaticResource TextMuted}"/>
-                        <TextBlock x:Name="TxtLanIp" Text="Detecting..." FontSize="11" FontWeight="SemiBold" Foreground="#10B981" Cursor="Hand" ToolTip="Click to copy IP address" MouseLeftButtonDown="TxtLanIp_MouseLeftButtonDown"/>
-                    </StackPanel>
-                    <TextBlock Text="Mute Hotkey: Ctrl+Shift+M" FontSize="10" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                </Grid>
-
-                <!-- USB Helper: 1-Click Install to Phone -->
-                <Border x:Name="BorderUsbHelper" Background="#0D1626" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0" Visibility="Collapsed">
+                <!-- USB 1-Click Phone Installer Helper (Shows in USB mode) -->
+                <Border x:Name="BorderUsbHelper" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="10" Padding="12,10" Margin="0,0,0,16" Visibility="Collapsed">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
-                            <TextBlock x:Name="TxtUsbDeviceStatus" Text="Connect phone via USB (with USB Debugging)" FontSize="11" Foreground="#94A3B8"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Connect phone via USB cable" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextWhite}"/>
+                            <TextBlock x:Name="TxtUsbDeviceStatus" Text="Plug in USB &amp; enable USB debugging" FontSize="11" Foreground="{StaticResource TextGray}"/>
                         </StackPanel>
-                        <Button x:Name="BtnInstallApkToPhone" Content="📲 Install App to Phone" Grid.Column="1" Click="BtnInstallApkToPhone_Click" Padding="10,3" Height="26" FontSize="11" Background="#10B981" Foreground="#042F1E" FontWeight="SemiBold" Cursor="Hand" BorderThickness="0"/>
+                        <Button x:Name="BtnInstallApkToPhone" Grid.Column="1" Content="📲 Install to Phone" Click="BtnInstallApkToPhone_Click" Background="#22262E" Foreground="{StaticResource MintAccent}" FontWeight="SemiBold" FontSize="11" Padding="10,4" Height="28" Cursor="Hand" BorderThickness="0">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                            </Button.Resources>
+                        </Button>
                     </Grid>
                 </Border>
-            </StackPanel>
-        </Border>
 
-        <!-- 3. Target Audio Endpoint Selection -->
-        <Border Grid.Row="3" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
-            <StackPanel>
-                <Grid Margin="0,0,0,6">
-                    <TextBlock Text="Audio endpoint" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
-                    <TextBlock Text="WASAPI Shared" FontSize="10" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right"/>
-                </Grid>
-                <ComboBox x:Name="CmbOutputDevices" Height="34"/>
-                <TextBlock Text="Discord and games should listen to CABLE Output." FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,6,0,0"/>
-
-                <!-- Driver Helper Banner (shown when VB-Cable is missing) -->
-                <Border x:Name="BorderDriverNotice" Background="#1C1812" BorderBrush="#EAB308" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,8,0,0" Visibility="Collapsed">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Virtual cable not found (needed for Discord/games)." FontSize="11" Foreground="#FDE047" VerticalAlignment="Center"/>
-                        <Button x:Name="BtnInstallDriver" Content="Get VB-CABLE" Grid.Column="1" Click="BtnInstallDriver_Click" Padding="10,3" Height="26" FontSize="11" Background="#EAB308" Foreground="#000000" FontWeight="SemiBold" Cursor="Hand" BorderThickness="0"/>
-                    </Grid>
-                </Border>
-            </StackPanel>
-        </Border>
-
-        <!-- 4. Hero Moment: Precision Segmented 24-LED Broadcast VU Meter -->
-        <Border Grid.Row="4" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
-            <StackPanel>
-                <Grid Margin="0,0,0,8">
-                    <TextBlock Text="Input level" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
-                    <TextBlock x:Name="TxtLevelDecibel" Text="-inf dB" FontSize="11" FontFamily="Consolas, monospace" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
-                </Grid>
-
-                <!-- Recessed Milled Meter Well -->
-                <Border Background="#090A0D" BorderBrush="#1C2028" BorderThickness="1" CornerRadius="6" Padding="6,8">
-                    <Canvas x:Name="CanvasMeter" Height="14" HorizontalAlignment="Stretch" ClipToBounds="True"/>
-                </Border>
-
-                <!-- Calibrated Decibel Scale Markings -->
-                <Grid Margin="6,4,6,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="-42" FontSize="9" Foreground="{StaticResource TextMuted}" Grid.Column="0" FontFamily="Consolas, monospace"/>
-                    <TextBlock Text="-24" FontSize="9" Foreground="{StaticResource TextMuted}" Grid.Column="1" FontFamily="Consolas, monospace"/>
-                    <TextBlock Text="-12" FontSize="9" Foreground="{StaticResource TextMuted}" Grid.Column="2" FontFamily="Consolas, monospace"/>
-                    <TextBlock Text="-6" FontSize="9" Foreground="{StaticResource TextMuted}" Grid.Column="3" FontFamily="Consolas, monospace"/>
-                    <TextBlock Text="0 dB" FontSize="9" Foreground="{StaticResource TextMuted}" Grid.Column="4" FontFamily="Consolas, monospace"/>
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <!-- 5. Gain, Studio Noise Gate, Sidetone & Hardware Mute -->
-        <Border Grid.Row="5" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,12">
-            <StackPanel>
-                <!-- Gain Fader & Hardware Mute Button -->
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                        <Grid Margin="0,0,0,6">
-                            <TextBlock Text="Gain" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
-                            <TextBlock x:Name="TxtGainValue" Text="100%" FontSize="11" FontFamily="Consolas, monospace" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Right"/>
-                        </Grid>
-                        <Slider x:Name="SliderGain" Minimum="50" Maximum="400" Value="100" 
-                                TickFrequency="25" IsSnapToTickEnabled="True" ValueChanged="SliderGain_ValueChanged"/>
-                    </StackPanel>
-
-                    <Button x:Name="BtnMute" Content="Mute" Style="{StaticResource HardwareButton}" Width="80" Height="36" Grid.Column="1" VerticalAlignment="Center" Click="BtnMute_Click"/>
-                </Grid>
-
-                <Separator Background="{StaticResource BorderHairline}" Margin="0,0,0,10"/>
-
-                <!-- Studio Enhancements: Noise Gate & Sidetone Monitor -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Noise Gate Control -->
-                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                        <Grid Margin="0,0,0,4">
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox x:Name="ChkNoiseGate" Content="Noise gate" IsChecked="True" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" Click="ChkNoiseGate_Click" VerticalAlignment="Center"/>
-                                <Ellipse x:Name="DotGateStatus" Width="6" Height="6" Fill="#10B981" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="Gate Status"/>
-                            </StackPanel>
-                            <TextBlock x:Name="TxtGateThreshold" Text="-45 dB" FontSize="10" FontFamily="Consolas, monospace" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        </Grid>
-                        <Slider x:Name="SliderNoiseGate" Minimum="-60" Maximum="-25" Value="-45" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SliderNoiseGate_ValueChanged"/>
-                    </StackPanel>
-
-                    <!-- Mic Monitor / Sidetone Checkbox -->
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
-                        <CheckBox x:Name="ChkSidetone" Content="Listen to mic" FontSize="11" Foreground="{StaticResource TextSecondary}" Click="ChkSidetone_Click" ToolTip="Hear yourself in headphones to check volume"/>
-                    </StackPanel>
-                </Grid>
-
-                <Separator Background="{StaticResource BorderHairline}" Margin="0,10,0,10"/>
-
-                <!-- Studio Voice Enhancer (Pro Broadcast Voice DSP) -->
-                <StackPanel>
-                    <Grid Margin="0,0,0,6">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Studio voice enhancer" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
-                            <Border Background="#1A2D23" BorderBrush="#10B981" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="8,0,0,0">
-                                <TextBlock x:Name="BadgeDspStatus" Text="SHURE SM7B" FontSize="9" FontWeight="Bold" Foreground="#10B981"/>
-                            </Border>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <CheckBox x:Name="ChkCompressor" Content="Compressor" IsChecked="True" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,10,0" Click="ChkCompressor_Click" ToolTip="Broadcast dynamic compression (voice leveling)"/>
-                            <CheckBox x:Name="ChkDeEsser" Content="De-Esser" IsChecked="True" FontSize="10" Foreground="{StaticResource TextSecondary}" Click="ChkDeEsser_Click" ToolTip="Tames harsh 'S' and 'Sh' sibilance"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <ComboBox x:Name="CmbStudioProfile" Height="30" SelectionChanged="CmbStudioProfile_SelectionChanged">
-                        <ComboBoxItem Content="🎙️ Broadcast Warmth (Shure SM7B Curve)" IsSelected="True"/>
-                        <ComboBoxItem Content="⚡ Crisp Esports (Discord &amp; Gaming Callouts)"/>
-                        <ComboBoxItem Content="🎙️ Podcast Studio (Rode PodMic Balanced)"/>
-                        <ComboBoxItem Content="🎚️ Natural (Clean 48kHz Bypass)"/>
-                    </ComboBox>
-
-                    <TextBlock x:Name="TxtProfileDescription" Text="Deep chest warmth (+4dB @ 140Hz), boxy mud cut &amp; radio compression." FontSize="10" Foreground="{StaticResource TextMuted}" Margin="2,4,0,0"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <!-- 6. Compact Terminal Log -->
-        <Border Grid.Row="6" Height="90" Background="#090A0E" BorderBrush="{StaticResource BorderHairline}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
-            <DockPanel>
-                <TextBlock Text="Activity" DockPanel.Dock="Top" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}" Margin="0,0,0,4"/>
-                <ScrollViewer x:Name="ScrollLog" VerticalScrollBarVisibility="Auto">
-                    <TextBox x:Name="TxtLog" Background="Transparent" Foreground="{StaticResource TextSecondary}" BorderThickness="0" 
-                             IsReadOnly="True" TextWrapping="Wrap" FontFamily="Consolas, monospace" FontSize="11"/>
-                </ScrollViewer>
-            </DockPanel>
-        </Border>
-
-        <!-- 7. Footer Options -->
-        <Grid Grid.Row="7" Margin="2,0,2,6">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <CheckBox x:Name="ChkStartup" Content="Launch on startup" Grid.Column="0" 
-                      Foreground="{StaticResource TextSecondary}" FontSize="11" Click="ChkStartup_Click"/>
-            <CheckBox x:Name="ChkMinimizeToTray" Content="Minimize to tray on close" IsChecked="True" Grid.Column="1" 
-                      Foreground="{StaticResource TextSecondary}" FontSize="11" HorizontalAlignment="Right"/>
-        </Grid>
-
-        <!-- 8. GitHub Profile Attribution & Update Check -->
-        <Border Grid.Row="8" BorderBrush="{StaticResource BorderHairline}" BorderThickness="0,1,0,0" Padding="2,8,2,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- GitHub Author Profile Link -->
-                <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnAuthorProfile_Click" ToolTip="Visit FuziwaraDesu67 on GitHub">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- GitHub Octocat SVG Path -->
-                        <Path Width="14" Height="14" Stretch="Uniform" Fill="#8B949E" Margin="0,0,6,0"
-                              Data="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                        <TextBlock Text="Created by " FontSize="11" Foreground="{StaticResource TextMuted}"/>
-                        <TextBlock Text="FuziwaraDesu67" FontSize="11" FontWeight="SemiBold" Foreground="#10B981" TextDecorations="Underline"/>
-                    </StackPanel>
+                <!-- 3. Primary CTA: Start receiver (Big Mint Button) -->
+                <Button x:Name="BtnConnect" Height="50" Content="Start receiver" Click="BtnConnect_Click"
+                        Background="{StaticResource MintAccent}" Foreground="#091E16"
+                        FontWeight="Bold" FontSize="16" Cursor="Hand" BorderThickness="0" Margin="0,0,0,8">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="12"/>
+                        </Style>
+                    </Button.Resources>
                 </Button>
 
-                <!-- Check for Updates Action & Version Badge -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtAppVersion" Text="EZmic v1.1.6" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
-                    <Button x:Name="BtnCheckUpdates" Content="Check for updates" Background="Transparent" Foreground="#8B949E" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnCheckUpdates_Click">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Foreground" Value="#10B981"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
+                <!-- Subtitle: Ready · IP address / Status -->
+                <TextBlock x:Name="TxtStatus" Text="Ready · 192.168.1.100" HorizontalAlignment="Center" FontSize="12" Foreground="{StaticResource TextGray}" Margin="0,0,0,20"/>
+
+                <!-- 4. Output Device Selection Card -->
+                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="12" Padding="14,12" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Output" FontSize="11" Foreground="{StaticResource TextDarkMuted}" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="CmbOutputDevices" Style="{StaticResource FigmaComboBox}"/>
+
+                        <!-- Driver Install Banner (Shown if EZmic virtual mic not found) -->
+                        <Border x:Name="BorderDriverNotice" Background="#18231C" BorderBrush="{StaticResource MintAccent}" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,10,0,0" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="TxtDriverNotice" Text="Virtual microphone needed for games" FontSize="11" Foreground="{StaticResource MintAccent}" VerticalAlignment="Center"/>
+                                <Button x:Name="BtnInstallDriver" Content="Install Virtual Mic" Grid.Column="1" Click="BtnInstallDriver_Click" Padding="10,4" Height="26" FontSize="11" Background="{StaticResource MintAccent}" Foreground="#091E16" FontWeight="SemiBold" Cursor="Hand" BorderThickness="0">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- 5. Input Level & Mute Row -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Input level + Bar meter -->
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <Grid Margin="0,0,0,6">
+                            <TextBlock Text="Input level" FontSize="13" Foreground="{StaticResource TextWhite}"/>
+                            <TextBlock x:Name="TxtLevelDecibel" Text="-∞ dB" FontSize="12" Foreground="{StaticResource TextGray}" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Canvas x:Name="CanvasMeter" Height="6" Background="#22262E" SizeChanged="CanvasMeter_SizeChanged"/>
+                    </StackPanel>
+
+                    <!-- Right: Mute Pill Button -->
+                    <Button x:Name="BtnMute" Grid.Column="2" Click="BtnMute_Click" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" Padding="16,8" Cursor="Hand" VerticalAlignment="Center">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="20"/></Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🎙️" FontSize="13" Margin="0,0,6,0"/>
+                            <TextBlock Text="Mute" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextWhite}"/>
+                        </StackPanel>
                     </Button>
-                    <TextBlock Text="•" FontSize="11" Foreground="#4A5568" Margin="6,0,6,0"/>
-                    <Button x:Name="BtnUninstall" Content="Uninstall" Background="Transparent" Foreground="#64748B" BorderThickness="0" FontSize="11" Cursor="Hand" Click="BtnUninstall_Click" ToolTip="Cleanly remove EZmic shortcuts and cached data from PC">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Foreground" Value="#EF4444"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                </Grid>
+
+                <!-- 6. Gain Control -->
+                <Grid Margin="0,0,0,6">
+                    <TextBlock Text="Gain" FontSize="14" Foreground="{StaticResource TextWhite}"/>
+                    <TextBlock x:Name="TxtGainValue" Text="100%" FontSize="13" Foreground="{StaticResource TextGray}" HorizontalAlignment="Right"/>
+                </Grid>
+                <Slider x:Name="SliderGain" Minimum="0" Maximum="300" Value="100" Style="{StaticResource FigmaMintSlider}" ValueChanged="SliderGain_ValueChanged" Margin="0,0,0,14"/>
+
+                <!-- 7. Noise Gate Control -->
+                <Grid Margin="0,0,0,6">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Noise gate" FontSize="14" Foreground="{StaticResource TextWhite}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <CheckBox x:Name="ChkNoiseGate" IsChecked="True" Style="{StaticResource FigmaToggleSwitch}" Click="ChkNoiseGate_Click" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtGateThreshold" Text="-45 dB" FontSize="13" Foreground="{StaticResource TextGray}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+                <Slider x:Name="SliderNoiseGate" Minimum="-60" Maximum="-10" Value="-45" Style="{StaticResource FigmaMintSlider}" ValueChanged="SliderNoiseGate_ValueChanged" Margin="0,0,0,16"/>
+
+                <!-- Subtle Section Divider -->
+                <Border Height="1" Background="{StaticResource BorderDark}" Margin="0,0,0,16"/>
+
+                <!-- 8. Voice Enhancer (DSP Processing) -->
+                <TextBlock Text="Voice enhancer" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextWhite}" Margin="0,0,0,10"/>
+
+                <!-- Preset Selector Card -->
+                <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <ComboBox x:Name="CmbStudioProfile" SelectedIndex="0" SelectionChanged="CmbStudioProfile_SelectionChanged" Style="{StaticResource FigmaCardComboBox}">
+                                <ComboBoxItem Content="Broadcast Warmth"/>
+                                <ComboBoxItem Content="Crisp Gamer"/>
+                                <ComboBoxItem Content="Podcast Pro"/>
+                                <ComboBoxItem Content="Studio Flat (Off)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="TxtProfileDescription" Text="Shure SM7B curve" FontSize="12" Foreground="{StaticResource TextGray}" Margin="4,2,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- DSP Quick Chips: Compressor, De-esser, Listen -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                    <CheckBox x:Name="ChkCompressor" Content="Compressor" IsChecked="True" Click="ChkCompressor_Click" Style="{StaticResource FigmaDspChip}" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="ChkDeEsser" Content="De-esser" IsChecked="True" Click="ChkDeEsser_Click" Style="{StaticResource FigmaDspChip}" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="ChkSidetone" Content="Listen" IsChecked="False" Click="ChkSidetone_Click" Style="{StaticResource FigmaDspChip}"/>
                 </StackPanel>
-            </Grid>
+
+                <!-- 9. Footer: Version + Mute Hotkey Hint -->
+                <Grid Margin="0,0,0,4">
+                    <TextBlock x:Name="TxtAppVersion" Text="v1.1.8" FontSize="11" Foreground="{StaticResource TextDarkMuted}"/>
+                    <TextBlock Text="Mute hotkey Ctrl + Shift + M" FontSize="11" Foreground="{StaticResource TextDarkMuted}" HorizontalAlignment="Right"/>
+                </Grid>
+
+                <!-- Hidden elements for code-behind bindings -->
+                <TextBlock x:Name="TxtLanIp" Visibility="Collapsed"/>
+                <TextBlock x:Name="TxtModeBadge" Visibility="Collapsed"/>
+                <TextBox x:Name="TxtLog" Visibility="Collapsed"/>
+                <Ellipse x:Name="DotGateStatus" Visibility="Collapsed"/>
+                <TextBlock x:Name="BadgeDspStatus" Visibility="Collapsed"/>
+                <ProgressBar x:Name="ProgressUpdate" Visibility="Collapsed"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 2: EZmic / Settings View            -->
+        <!-- ========================================== -->
+        <Border x:Name="GridSettingsView" Background="{StaticResource WindowBg}" Visibility="Collapsed" Padding="24,20,24,20">
+            <StackPanel>
+
+                <!-- Header: Back Arrow + Settings Title -->
+                <Grid Margin="0,0,0,28">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="BtnBackFromSettings" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnBackFromSettings_Click" Padding="4,2" Margin="0,0,12,0">
+                        <TextBlock Text="❮" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextWhite}"/>
+                    </Button>
+                    <TextBlock Grid.Column="1" Text="Settings" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- System Preferences -->
+                <Grid Margin="0,0,0,18">
+                    <TextBlock Text="Launch on startup" FontSize="14" Foreground="{StaticResource TextWhite}" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="ChkStartup" Click="ChkStartup_Click" Style="{StaticResource FigmaToggleSwitch}" HorizontalAlignment="Right"/>
+                </Grid>
+
+                <Grid Margin="0,0,0,24">
+                    <TextBlock Text="Minimize to tray on close" FontSize="14" Foreground="{StaticResource TextWhite}" VerticalAlignment="Center"/>
+                    <CheckBox x:Name="ChkMinimizeToTray" IsChecked="True" Style="{StaticResource FigmaToggleSwitch}" HorizontalAlignment="Right"/>
+                </Grid>
+
+                <!-- Divider -->
+                <Border Height="1" Background="{StaticResource BorderDark}" Margin="0,0,0,20"/>
+
+                <!-- Links & Updates -->
+                <Button x:Name="BtnCheckUpdates" Click="BtnCheckUpdates_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="0,10" Margin="0,0,0,8" HorizontalContentAlignment="Stretch">
+                    <Grid>
+                        <TextBlock Text="Check for updates" FontSize="14" Foreground="{StaticResource TextWhite}" VerticalAlignment="Center"/>
+                        <TextBlock Text="v1.1.8 ❯" FontSize="13" Foreground="{StaticResource TextGray}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+
+                <Button x:Name="BtnBuyCoffee" Click="BtnBuyCoffee_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="0,10" Margin="0,0,0,8" HorizontalContentAlignment="Stretch">
+                    <Grid>
+                        <TextBlock Text="Support the developer" FontSize="14" Foreground="{StaticResource TextWhite}" VerticalAlignment="Center"/>
+                        <TextBlock Text="Buy me a coffee ❯" FontSize="13" Foreground="{StaticResource TextGray}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+
+                <Button x:Name="BtnUninstall" Click="BtnUninstall_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="0,10" Margin="0,0,0,8" HorizontalContentAlignment="Stretch">
+                    <Grid>
+                        <TextBlock Text="Uninstall EZmic" FontSize="14" Foreground="#EF4444" VerticalAlignment="Center"/>
+                        <TextBlock Text="Clean removal ❯" FontSize="13" Foreground="{StaticResource TextDarkMuted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+
+            </StackPanel>
         </Border>
+
     </Grid>
-    </ScrollViewer>
 </Window>

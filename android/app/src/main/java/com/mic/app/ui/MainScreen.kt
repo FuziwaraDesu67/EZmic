@@ -7,10 +7,12 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -67,6 +69,8 @@ fun MainScreen(
     val coroutineScope = rememberCoroutineScope()
     val prefs = remember { context.getSharedPreferences("ezmic_prefs", Context.MODE_PRIVATE) }
 
+    var showSettingsScreen by remember { mutableStateOf(false) }
+
     var selectedMode by remember {
         val saved = prefs.getString("selected_mode", TransportMode.USB.name)
         mutableStateOf(try { TransportMode.valueOf(saved ?: TransportMode.USB.name) } catch (_: Exception) { TransportMode.USB })
@@ -74,13 +78,13 @@ fun MainScreen(
     var wifiIp by remember { mutableStateOf(prefs.getString("wifi_ip", "192.168.1.100") ?: "192.168.1.100") }
     var wifiPort by remember { mutableStateOf(prefs.getString("wifi_port", "49152") ?: "49152") }
     var usbPort by remember { mutableStateOf(prefs.getString("usb_port", "49153") ?: "49153") }
-    var selectedDevice by remember { 
+    var selectedDevice by remember {
         mutableStateOf(
-            pairedDevices.find { 
+            pairedDevices.find {
                 val n = it.name ?: ""
                 n.contains("DESKTOP", true) || n.contains("PC", true) || n.contains("LAPTOP", true)
             } ?: pairedDevices.firstOrNull()
-        ) 
+        )
     }
     var enableNs by remember { mutableStateOf(prefs.getBoolean("enable_ns", true)) }
     var enableAec by remember { mutableStateOf(prefs.getBoolean("enable_aec", true)) }
@@ -88,6 +92,10 @@ fun MainScreen(
     var gainSlider by remember { mutableFloatStateOf(prefs.getFloat("gain_slider", 100f)) }
     var showSwitchDialog by remember { mutableStateOf(false) }
     var pendingMode by remember { mutableStateOf<TransportMode?>(null) }
+
+    // Settings screen preferences
+    var autoStartBoot by remember { mutableStateOf(prefs.getBoolean("auto_start_boot", false)) }
+    var runInBackground by remember { mutableStateOf(prefs.getBoolean("run_in_background", true)) }
 
     // Update Checker state
     var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
@@ -125,6 +133,12 @@ fun MainScreen(
     LaunchedEffect(gainSlider) {
         prefs.edit().putFloat("gain_slider", gainSlider).apply()
     }
+    LaunchedEffect(autoStartBoot) {
+        prefs.edit().putBoolean("auto_start_boot", autoStartBoot).apply()
+    }
+    LaunchedEffect(runInBackground) {
+        prefs.edit().putBoolean("run_in_background", runInBackground).apply()
+    }
 
     // Auto-check for updates on launch
     LaunchedEffect(Unit) {
@@ -158,177 +172,515 @@ fun MainScreen(
         modifier = Modifier.fillMaxSize(),
         color = ChassisBackground
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // 1. Header with Broadcast Tally
-            Row(
+        if (showSettingsScreen) {
+            // ==========================================
+            // SCREEN 2: EZmic / Settings View
+            // ==========================================
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(horizontal = 22.dp, vertical = 24.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column {
+                // Settings Header with Back Arrow
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 28.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(PanelSurface)
+                            .border(1.dp, BorderHairline, CircleShape)
+                            .clickable { showSettingsScreen = false },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("❮", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
                     Text(
-                        text = "EZmic",
+                        text = "Settings",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    Text(
-                        text = "Studio microphone bridge",
-                        fontSize = 12.sp,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
                 }
 
-                // Authentic Broadcast Tally Pill
-                val tallyText = when {
-                    state.isMuted && state.isStreaming -> "MUTED"
-                    state.isStreaming -> "ON AIR"
-                    else -> "STANDBY"
-                }
-                val tallyColor = when {
-                    state.isMuted && state.isStreaming -> StudioRed
-                    state.isStreaming -> StudioGreen
-                    else -> TextMuted
+                // Preferences Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, BorderHairline),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "General",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextSecondary,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        // Run in background toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Run in background", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+                                Text("Keep audio streaming when screen is off", fontSize = 11.sp, color = TextSecondary)
+                            }
+                            Switch(
+                                checked = runInBackground,
+                                onCheckedChange = { runInBackground = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = StudioMint,
+                                    uncheckedThumbColor = Color(0xFF8E959E),
+                                    uncheckedTrackColor = ControlWell,
+                                    checkedBorderColor = Color.Transparent,
+                                    uncheckedBorderColor = BorderHairline
+                                )
+                            )
+                        }
+
+                        Divider(color = BorderHairline, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
+
+                        // Launch on boot toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Launch on device boot", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+                                Text("Start background service on phone startup", fontSize = 11.sp, color = TextSecondary)
+                            }
+                            Switch(
+                                checked = autoStartBoot,
+                                onCheckedChange = { autoStartBoot = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = StudioMint,
+                                    uncheckedThumbColor = Color(0xFF8E959E),
+                                    uncheckedTrackColor = ControlWell,
+                                    checkedBorderColor = Color.Transparent,
+                                    uncheckedBorderColor = BorderHairline
+                                )
+                            )
+                        }
+                    }
                 }
 
+                // Links & Actions Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, BorderHairline),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Check for updates row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    if (!isCheckingUpdate) {
+                                        isCheckingUpdate = true
+                                        coroutineScope.launch {
+                                            val info = UpdateChecker.check(context)
+                                            isCheckingUpdate = false
+                                            if (info != null && info.hasUpdate) {
+                                                updateInfo = info
+                                                showUpdateDialog = true
+                                            } else if (info != null) {
+                                                Toast.makeText(context, "EZmic is up to date (${UpdateChecker.getAppVersion(context)})", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "Unable to check updates. Please check connection.", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Check for updates", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+                            Text(
+                                text = if (isCheckingUpdate) "Checking..." else "${UpdateChecker.getAppVersion(context)} ❯",
+                                fontSize = 13.sp,
+                                color = StudioMint
+                            )
+                        }
+
+                        Divider(color = BorderHairline, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+                        // Support developer row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/eaadarsh"))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {}
+                                }
+                                .padding(vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Support the developer", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+                            Text("Buy me a coffee ❯", fontSize = 13.sp, color = Color(0xFFFFDD00))
+                        }
+
+                        Divider(color = BorderHairline, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+                        // GitHub repository row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FuziwaraDesu67/EZmic"))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {}
+                                }
+                                .padding(vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("GitHub repository", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary)
+                            Text("FuziwaraDesu67 ❯", fontSize = 13.sp, color = TextSecondary)
+                        }
+                    }
+                }
+
+                // Battery optimization guidance tip
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(PanelSurface)
-                        .border(1.dp, tallyColor.copy(alpha = if (state.isStreaming) 0.5f else 0.2f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF0F151F))
+                        .border(1.dp, Color(0xFF1E2D45), RoundedCornerShape(10.dp))
+                        .padding(14.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (state.isStreaming) tallyColor.copy(alpha = tallyAlpha)
-                                    else tallyColor
-                                )
-                        )
-                        Spacer(modifier = Modifier.width(7.dp))
+                    Column {
+                        Text("💡 Battery Optimization Tip", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF60A5FA))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = tallyText,
+                            text = "To prevent Android from silencing the microphone in the background during long sessions, set battery usage for EZmic to 'Unrestricted' in App Info.",
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (state.isStreaming) tallyColor else TextSecondary
+                            color = TextSecondary,
+                            lineHeight = 16.sp
                         )
                     }
                 }
             }
-
-            // 2. Connection Transport Selector (Liquid Glass Waterline Dock)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = PanelSurface),
-                shape = RoundedCornerShape(12.dp),
+        } else {
+            // ==========================================
+            // SCREEN 1: EZmic / Main Screen
+            // ==========================================
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, BorderHairline, RoundedCornerShape(12.dp))
-                    .padding(bottom = 14.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 22.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                // 1. Header with Broadcast Tally + Settings Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 18.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
                         Text(
-                            text = "Transport",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
+                            text = "EZmic",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                         Text(
-                            text = when (selectedMode) {
-                                TransportMode.WIFI -> "Wi-Fi Ready"
-                                TransportMode.USB -> "USB Ready"
-                                TransportMode.BLUETOOTH -> "Bluetooth Ready"
-                            },
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = StudioGreen
+                            text = "Studio microphone bridge",
+                            fontSize = 12.sp,
+                            color = TextSecondary,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
 
-                    // Liquid Glass Dock Capsule (Waterline Pill)
-                    LiquidGlassDockSlider(
-                        selectedMode = selectedMode,
-                        onModeSelected = { mode ->
-                            if (mode != selectedMode) {
-                                if (state.isStreaming) {
-                                    pendingMode = mode
-                                    showSwitchDialog = true
-                                } else {
-                                    selectedMode = mode
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Tally Pill
+                        val tallyText = when {
+                            state.isMuted && state.isStreaming -> "MUTED"
+                            state.isStreaming -> "ON AIR"
+                            else -> "STANDBY"
+                        }
+                        val tallyColor = when {
+                            state.isMuted && state.isStreaming -> StudioRed
+                            state.isStreaming -> StudioMint
+                            else -> TextMuted
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(PanelSurface)
+                                .border(1.dp, tallyColor.copy(alpha = if (state.isStreaming) 0.5f else 0.2f), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (state.isStreaming) tallyColor.copy(alpha = tallyAlpha)
+                                            else tallyColor
+                                        )
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = tallyText,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (state.isStreaming) tallyColor else TextSecondary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        // Settings Icon Button (···)
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(PanelSurface)
+                                .border(1.dp, BorderHairline, CircleShape)
+                                .clickable { showSettingsScreen = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("···", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextSecondary)
+                        }
+                    }
+                }
+
+                // 2. Segmented Transport Dock (Wi-Fi, USB, Bluetooth)
+                LiquidGlassDockSlider(
+                    selectedMode = selectedMode,
+                    onModeSelected = { mode ->
+                        if (mode != selectedMode) {
+                            if (state.isStreaming) {
+                                pendingMode = mode
+                                showSwitchDialog = true
+                            } else {
+                                selectedMode = mode
+                            }
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 3. Primary CTA: Hero Start/Stop Broadcast Button
+                Button(
+                    onClick = {
+                        if (state.isStreaming) {
+                            onStop()
+                        } else {
+                            when (selectedMode) {
+                                TransportMode.WIFI -> onStartWifi(wifiIp, wifiPort.toIntOrNull() ?: 49152, true, enableNs, enableAec, isStereoMode)
+                                TransportMode.USB -> onStartUsb(usbPort.toIntOrNull() ?: 49153, true, enableNs, enableAec, isStereoMode)
+                                TransportMode.BLUETOOTH -> {
+                                    val dev = selectedDevice
+                                    if (dev != null) {
+                                        onStartBluetooth(dev, true, enableNs, enableAec, isStereoMode)
+                                    } else {
+                                        Toast.makeText(context, "Select your paired PC first", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (state.isStreaming) Color(0xFF1E222A) else StudioMint
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .border(
+                            width = if (state.isStreaming) 1.dp else 0.dp,
+                            color = if (state.isStreaming) StudioRed else Color.Transparent,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                ) {
+                    Text(
+                        text = if (state.isStreaming) "Stop broadcast" else "Start broadcast",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = if (state.isStreaming) StudioRed else Color(0xFF091E16)
                     )
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Transport Contextual Config
-                    when (selectedMode) {
-                        TransportMode.USB -> {
-                            Text(
-                                text = "Plug phone into PC with USB debugging enabled for 5ms latency.",
-                                fontSize = 12.sp,
-                                color = TextSecondary
+                // Subtitle: Status Readout under button
+                val isError = state.statusMessage.contains("failed", ignoreCase = true) ||
+                              state.statusMessage.contains("error", ignoreCase = true)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 14.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    isError -> StudioRed
+                                    state.isStreaming -> StudioMint
+                                    state.isConnected -> StudioMint
+                                    else -> TextMuted
+                                }
                             )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = when {
+                            state.isStreaming -> "Broadcasting 48kHz Opus • ${if (isStereoMode) "Stereo" else "Mono"}"
+                            selectedMode == TransportMode.WIFI -> "Ready · $wifiIp"
+                            selectedMode == TransportMode.USB -> "Ready · USB low-latency"
+                            else -> "Ready · Bluetooth"
+                        },
+                        fontSize = 12.sp,
+                        color = when {
+                            isError -> StudioRed
+                            state.isStreaming -> TextPrimary
+                            else -> TextSecondary
                         }
-                        TransportMode.WIFI -> {
-                            OutlinedTextField(
-                                value = wifiIp,
-                                onValueChange = { wifiIp = it },
-                                label = { Text("PC IP address", fontSize = 12.sp) },
-                                singleLine = true,
-                                enabled = !state.isStreaming,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    onDiscoverWifi { ip, port, _ ->
-                                        wifiIp = ip
-                                        wifiPort = port.toString()
-                                    }
-                                },
-                                enabled = !state.isStreaming,
-                                colors = ButtonDefaults.buttonColors(containerColor = ControlWell),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Auto-detect PC", color = TextPrimary, fontSize = 12.sp)
+                    )
+                }
+
+                // 4. Contextual Transport Configuration Card
+                when (selectedMode) {
+                    TransportMode.WIFI -> {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, BorderHairline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 14.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    text = "Wi-Fi Receiver Connection",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextSecondary,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                OutlinedTextField(
+                                    value = wifiIp,
+                                    onValueChange = { wifiIp = it },
+                                    label = { Text("PC IP address", fontSize = 12.sp) },
+                                    singleLine = true,
+                                    enabled = !state.isStreaming,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = StudioMint,
+                                        unfocusedBorderColor = BorderHairline,
+                                        focusedLabelColor = StudioMint,
+                                        unfocusedLabelColor = TextSecondary,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        onDiscoverWifi { ip, port, _ ->
+                                            wifiIp = ip
+                                            wifiPort = port.toString()
+                                        }
+                                    },
+                                    enabled = !state.isStreaming,
+                                    colors = ButtonDefaults.buttonColors(containerColor = ControlWell),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Auto-detect PC", color = StudioMint, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                }
                             }
                         }
-                        TransportMode.BLUETOOTH -> {
-                            if (pairedDevices.isEmpty()) {
-                                Text(
-                                    text = "No paired Bluetooth devices found. Pair PC in Bluetooth settings first.",
-                                    fontSize = 12.sp,
-                                    color = StudioRed
-                                )
-                            } else {
-                                var expanded by remember { mutableStateOf(false) }
+                    }
+                    TransportMode.USB -> {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, BorderHairline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 14.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("⚡", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Column {
+                                    Text("USB Mode: Ultra-low 5ms latency", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                                    Text("Connect phone to PC with USB debugging enabled.", fontSize = 11.sp, color = TextSecondary)
+                                }
+                            }
+                        }
+                    }
+                    TransportMode.BLUETOOTH -> {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, BorderHairline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 14.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    text = "Target Bluetooth PC",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = TextSecondary,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                if (pairedDevices.isEmpty()) {
                                     Text(
-                                        text = "Target Bluetooth PC:",
-                                        fontSize = 11.sp,
-                                        color = TextSecondary,
-                                        modifier = Modifier.padding(bottom = 6.dp)
+                                        text = "No paired PC found. Pair your PC in Android Bluetooth settings first.",
+                                        fontSize = 12.sp,
+                                        color = StudioRed
                                     )
+                                } else {
+                                    var expanded by remember { mutableStateOf(false) }
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -336,7 +688,7 @@ fun MainScreen(
                                             .background(ControlWell)
                                             .border(1.dp, BorderHairline, RoundedCornerShape(8.dp))
                                             .clickable(enabled = !state.isStreaming) { expanded = true }
-                                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                                            .padding(horizontal = 12.dp, vertical = 10.dp)
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -344,7 +696,7 @@ fun MainScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = selectedDevice?.name ?: selectedDevice?.address ?: "Select paired device...",
+                                                text = selectedDevice?.name ?: selectedDevice?.address ?: "Select paired PC...",
                                                 fontSize = 13.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = TextPrimary
@@ -373,459 +725,293 @@ fun MainScreen(
                         }
                     }
                 }
-            }
 
-            // 3. Hero Moment: 24-Segment Broadcast LED Ladder VU Meter
-            Card(
-                colors = CardDefaults.cardColors(containerColor = PanelSurface),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, BorderHairline, RoundedCornerShape(12.dp))
-                    .padding(bottom = 14.dp)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Input level",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
-                        )
-
-                        val decibels = if (animatedLevel <= 0.008f) "-inf dB" else {
-                            val db = 20 * log10(max(0.001f, animatedLevel))
-                            "${"%.1f".format(db)} dB"
-                        }
-                        Text(
-                            text = decibels,
-                            fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // 24-Segment Discrete LED Ladder Meter
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF090A0D))
-                            .border(1.dp, Color(0xFF1C2028), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 7.dp)
-                    ) {
-                        Canvas(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(16.dp)
+                // 5. Input Level & Mute Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderHairline),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val segmentCount = 24
-                            val gap = 2.5f.dp.toPx()
-                            val totalGaps = gap * (segmentCount - 1)
-                            val segWidth = (size.width - totalGaps) / segmentCount
-                            val litCount = (animatedLevel * segmentCount).toInt()
+                            Text(
+                                text = "Input level",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary
+                            )
 
-                            for (i in 0 until segmentCount) {
-                                val isLit = i < litCount
-                                val activeColor = when {
-                                    i < 16 -> StudioGreen
-                                    i < 20 -> StudioAmber
-                                    else -> StudioRed
-                                }
-                                val unlitColor = when {
-                                    i < 16 -> Color(0xFF0C241A)
-                                    i < 20 -> Color(0xFF281B07)
-                                    else -> Color(0xFF280D0D)
-                                }
+                            val decibels = if (animatedLevel <= 0.008f) "-inf dB" else {
+                                val db = 20 * log10(max(0.001f, animatedLevel))
+                                "${"%.1f".format(db)} dB"
+                            }
+                            Text(
+                                text = decibels,
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary
+                            )
+                        }
 
-                                drawRoundRect(
-                                    color = if (isLit) activeColor else unlitColor,
-                                    topLeft = Offset(i * (segWidth + gap), 0f),
-                                    size = Size(segWidth, size.height),
-                                    cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Horizontal Level Meter + Mute Button Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Level Meter Bar
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(10.dp)
+                                    .clip(RoundedCornerShape(5.dp))
+                                    .background(Color(0xFF22262E))
+                            ) {
+                                val meterBrush = if (state.isMuted) {
+                                    Brush.linearGradient(listOf(StudioRed, StudioRed))
+                                } else {
+                                    Brush.horizontalGradient(listOf(StudioMint, Color(0xFF38EF7D)))
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(animatedLevel.coerceIn(0f, 1f))
+                                        .clip(RoundedCornerShape(5.dp))
+                                        .background(meterBrush)
                                 )
                             }
-                        }
-                    }
 
-                    // Calibrated Decibel Scale
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 6.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        listOf("-42", "-24", "-12", "-6", "0 dB").forEach { mark ->
-                            Text(
-                                text = mark,
-                                fontSize = 9.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = TextMuted
-                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            // Mute Pill Button
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(if (state.isMuted) Color(0xFF3B1212) else Color(0xFF22262E))
+                                    .border(1.dp, if (state.isMuted) StudioRed else BorderHairline, RoundedCornerShape(16.dp))
+                                    .clickable { onToggleMute(!state.isMuted) }
+                                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("🎙️", fontSize = 11.sp)
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = if (state.isMuted) "Unmute" else "Mute",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (state.isMuted) StudioRed else TextPrimary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            // 4. Hardware Gain & Audio Enhancements
-            Card(
-                colors = CardDefaults.cardColors(containerColor = PanelSurface),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, BorderHairline, RoundedCornerShape(12.dp))
-                    .padding(bottom = 18.dp)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Gain",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = "${gainSlider.toInt()}%",
-                            fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
-                        )
-                    }
-
-                    Slider(
-                        value = gainSlider,
-                        onValueChange = {
-                            gainSlider = it
-                            onGainChanged(it / 100f)
-                        },
-                        valueRange = 50f..300f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(enabled = state.isStreaming) {
-                                Toast.makeText(context, "Noise suppression is locked while broadcasting.", Toast.LENGTH_SHORT).show()
-                            }
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                // 6. Gain Control Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderHairline),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Noise suppression",
-                                fontSize = 13.sp,
-                                color = if (state.isStreaming) TextMuted else TextPrimary
+                                text = "Gain",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimary
                             )
-                            if (state.isStreaming) {
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("🔒", fontSize = 11.sp)
-                            }
-                        }
-                        Switch(
-                            checked = enableNs,
-                            onCheckedChange = { if (!state.isStreaming) enableNs = it },
-                            enabled = !state.isStreaming,
-                            colors = SwitchDefaults.colors(
-                                disabledCheckedThumbColor = StudioGreen.copy(alpha = 0.6f),
-                                disabledCheckedTrackColor = StudioGreen.copy(alpha = 0.25f),
-                                disabledUncheckedThumbColor = Color(0xFF6B7280).copy(alpha = 0.4f),
-                                disabledUncheckedTrackColor = Color(0xFF374151).copy(alpha = 0.2f)
-                            )
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(enabled = state.isStreaming) {
-                                Toast.makeText(context, "Echo cancellation is locked while broadcasting.", Toast.LENGTH_SHORT).show()
-                            }
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Echo cancellation",
-                                fontSize = 13.sp,
-                                color = if (state.isStreaming) TextMuted else TextPrimary
+                                text = "${gainSlider.toInt()}%",
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextSecondary
                             )
-                            if (state.isStreaming) {
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("🔒", fontSize = 11.sp)
-                            }
                         }
-                        Switch(
-                            checked = enableAec,
-                            onCheckedChange = { if (!state.isStreaming) enableAec = it },
-                            enabled = !state.isStreaming,
-                            colors = SwitchDefaults.colors(
-                                disabledCheckedThumbColor = StudioGreen.copy(alpha = 0.6f),
-                                disabledCheckedTrackColor = StudioGreen.copy(alpha = 0.25f),
-                                disabledUncheckedThumbColor = Color(0xFF6B7280).copy(alpha = 0.4f),
-                                disabledUncheckedTrackColor = Color(0xFF374151).copy(alpha = 0.2f)
-                            )
+
+                        Slider(
+                            value = gainSlider,
+                            onValueChange = {
+                                gainSlider = it
+                                onGainChanged(it / 100f)
+                            },
+                            valueRange = 50f..300f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color.White,
+                                activeTrackColor = StudioMint,
+                                inactiveTrackColor = Color(0xFF22262E)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
+                }
 
-                    // True Stereo Mode Toggle
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(enabled = state.isStreaming) {
-                                Toast.makeText(context, "Channel mode is locked while broadcasting.", Toast.LENGTH_SHORT).show()
-                            }
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
+                // 7. Voice Enhancer / DSP Card
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PanelSurface),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, BorderHairline),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 18.dp)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Voice enhancer",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        // Noise suppression
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = if (isStereoMode) "Stereo (Music/ASMR)" else "Voice Mode (Dual-Mono)",
-                                    fontSize = 13.sp,
-                                    color = if (state.isStreaming) TextMuted else TextPrimary
-                                )
+                                Text("Noise suppression", fontSize = 13.sp, color = if (state.isStreaming) TextMuted else TextPrimary)
                                 if (state.isStreaming) {
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("🔒", fontSize = 11.sp)
                                 }
                             }
-                            Text(
-                                text = if (isStereoMode) "Dual-mic wide recording (Landscape)" else "Focused speech for Discord & Gaming",
-                                fontSize = 11.sp,
-                                color = TextMuted
+                            Switch(
+                                checked = enableNs,
+                                onCheckedChange = { if (!state.isStreaming) enableNs = it },
+                                enabled = !state.isStreaming,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = StudioMint,
+                                    uncheckedThumbColor = Color(0xFF8E959E),
+                                    uncheckedTrackColor = ControlWell,
+                                    checkedBorderColor = Color.Transparent,
+                                    uncheckedBorderColor = BorderHairline
+                                )
                             )
                         }
-                        Switch(
-                            checked = isStereoMode,
-                            onCheckedChange = { if (!state.isStreaming) isStereoMode = it },
-                            enabled = !state.isStreaming,
-                            colors = SwitchDefaults.colors(
-                                disabledCheckedThumbColor = StudioGreen.copy(alpha = 0.6f),
-                                disabledCheckedTrackColor = StudioGreen.copy(alpha = 0.25f),
-                                disabledUncheckedThumbColor = Color(0xFF6B7280).copy(alpha = 0.4f),
-                                disabledUncheckedTrackColor = Color(0xFF374151).copy(alpha = 0.2f)
-                            )
-                        )
-                    }
 
-                    // Studio Quality Information Banner
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF0D1117))
-                            .border(1.dp, Color(0xFF1F2937), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("🎙️", fontSize = 14.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
+                        // Echo cancellation
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Echo cancellation", fontSize = 13.sp, color = if (state.isStreaming) TextMuted else TextPrimary)
+                                if (state.isStreaming) {
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("🔒", fontSize = 11.sp)
+                                }
+                            }
+                            Switch(
+                                checked = enableAec,
+                                onCheckedChange = { if (!state.isStreaming) enableAec = it },
+                                enabled = !state.isStreaming,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = StudioMint,
+                                    uncheckedThumbColor = Color(0xFF8E959E),
+                                    uncheckedTrackColor = ControlWell,
+                                    checkedBorderColor = Color.Transparent,
+                                    uncheckedBorderColor = BorderHairline
+                                )
+                            )
+                        }
+
+                        // True Stereo Toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Column {
-                                Text("PC Studio Enhancer Ready", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StudioGreen)
-                                Text("Real-time Shure SM7B broadcast warmth & compression on PC.", fontSize = 10.sp, color = TextSecondary)
-                            }
-                        }
-                    }
-
-                    if (state.isStreaming) {
-                        Text(
-                            text = "🔒 Hardware DSP filters are locked while broadcast is on air.",
-                            fontSize = 11.sp,
-                            color = TextMuted,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            }
-
-            // Status Readout
-            val isError = state.statusMessage.contains("failed", ignoreCase = true) || 
-                          state.statusMessage.contains("error", ignoreCase = true)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp, start = 4.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(7.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when {
-                                isError -> StudioRed
-                                state.isConnected -> StudioGreen
-                                state.isStreaming -> StudioAmber
-                                else -> Color(0xFF6B7280)
-                            }
-                        )
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = state.statusMessage.ifEmpty { "Ready to connect" },
-                    fontSize = 12.sp,
-                    color = when {
-                        isError -> StudioRed
-                        state.isConnected -> TextPrimary
-                        else -> TextSecondary
-                    },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            // 5. Primary Broadcast Push-Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Button(
-                    onClick = {
-                        if (state.isStreaming) {
-                            onStop()
-                        } else {
-                            when (selectedMode) {
-                                TransportMode.WIFI -> onStartWifi(wifiIp, wifiPort.toIntOrNull() ?: 49152, true, enableNs, enableAec, isStereoMode)
-                                TransportMode.USB -> onStartUsb(usbPort.toIntOrNull() ?: 49153, true, enableNs, enableAec, isStereoMode)
-                                TransportMode.BLUETOOTH -> {
-                                    val dev = selectedDevice
-                                    if (dev != null) {
-                                        onStartBluetooth(dev, true, enableNs, enableAec, isStereoMode)
-                                    } else {
-                                        Toast.makeText(context, "Select your paired PC first", Toast.LENGTH_SHORT).show()
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = if (isStereoMode) "Stereo (Music/ASMR)" else "Voice Mode (Dual-Mono)",
+                                        fontSize = 13.sp,
+                                        color = if (state.isStreaming) TextMuted else TextPrimary
+                                    )
+                                    if (state.isStreaming) {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("🔒", fontSize = 11.sp)
                                     }
+                                }
+                                Text(
+                                    text = if (isStereoMode) "Dual-mic wide recording" else "Focused speech for Discord & Gaming",
+                                    fontSize = 11.sp,
+                                    color = TextMuted
+                                )
+                            }
+                            Switch(
+                                checked = isStereoMode,
+                                onCheckedChange = { if (!state.isStreaming) isStereoMode = it },
+                                enabled = !state.isStreaming,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = StudioMint,
+                                    uncheckedThumbColor = Color(0xFF8E959E),
+                                    uncheckedTrackColor = ControlWell,
+                                    checkedBorderColor = Color.Transparent,
+                                    uncheckedBorderColor = BorderHairline
+                                )
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // PC Studio Enhancer banner
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF0D141E))
+                                .border(1.dp, Color(0xFF1E2A3A), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("🎙️", fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("PC Studio Enhancer Ready", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StudioMint)
+                                    Text("Real-time Shure SM7B broadcast warmth & compression on PC.", fontSize = 10.sp, color = TextSecondary)
                                 }
                             }
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (state.isStreaming) Color(0xFF1E222A) else StudioGreen
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .border(
-                            width = if (state.isStreaming) 1.dp else 0.dp,
-                            color = if (state.isStreaming) StudioRed else Color.Transparent,
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                ) {
-                    Text(
-                        text = if (state.isStreaming) "Stop broadcast" else "Start broadcast",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = if (state.isStreaming) StudioRed else Color(0xFF042F1E)
-                    )
-                }
-
-                if (state.isStreaming) {
-                    FilledTonalButton(
-                        onClick = { onToggleMute(!state.isMuted) },
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = if (state.isMuted) Color(0xFF3B1212) else Color(0xFF1E222A)
-                        ),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .height(48.dp)
-                            .border(
-                                width = 1.dp,
-                                color = if (state.isMuted) StudioRed else BorderHairline,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                    ) {
-                        Text(
-                            text = if (state.isMuted) "Unmute" else "Mute",
-                            color = if (state.isMuted) StudioRed else TextPrimary,
-                            fontWeight = FontWeight.SemiBold
-                        )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // 6. GitHub Author Attribution & Version Footer
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+                // Subtle Footer: Version & Creator
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FuziwaraDesu67"))
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                        }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "Created by ",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                    Text(
-                        text = "FuziwaraDesu67",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = StudioGreen
-                    )
-                }
-
-                // Buy Me A Coffee Support Link
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .padding(top = 2.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/eaadarsh"))
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                        }
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "☕ Buy me a coffee",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFFFDD00)
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(top = 2.dp)
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "EZmic ${UpdateChecker.getAppVersion(context)}",
@@ -833,29 +1019,15 @@ fun MainScreen(
                         color = TextMuted
                     )
                     Text(
-                        text = "  •  ",
-                        fontSize = 11.sp,
-                        color = TextMuted
-                    )
-                    Text(
-                        text = if (isCheckingUpdate) "Checking..." else "Check for updates",
+                        text = "FuziwaraDesu67",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isCheckingUpdate) TextMuted else StudioGreen,
-                        modifier = Modifier.clickable(enabled = !isCheckingUpdate) {
-                            isCheckingUpdate = true
-                            coroutineScope.launch {
-                                val info = UpdateChecker.check(context)
-                                isCheckingUpdate = false
-                                if (info != null && info.hasUpdate) {
-                                    updateInfo = info
-                                    showUpdateDialog = true
-                                } else if (info != null) {
-                                    Toast.makeText(context, "EZmic is up to date (${UpdateChecker.getAppVersion(context)})", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Unable to check updates. Please check your internet connection.", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                        color = TextMuted,
+                        modifier = Modifier.clickable {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/FuziwaraDesu67/EZmic"))
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
                         }
                     )
                 }
@@ -893,7 +1065,7 @@ fun MainScreen(
                             Text(
                                 text = "✅ Update downloaded successfully. Tap Install Now to complete the update.",
                                 fontSize = 12.sp,
-                                color = StudioGreen,
+                                color = StudioMint,
                                 fontWeight = FontWeight.SemiBold
                             )
                         } else if (isDownloadingUpdate) {
@@ -909,7 +1081,7 @@ fun MainScreen(
                                     .fillMaxWidth()
                                     .height(8.dp)
                                     .clip(RoundedCornerShape(4.dp)),
-                                color = StudioGreen,
+                                color = StudioMint,
                                 trackColor = Color(0xFF1E2638)
                             )
                         } else if (updateErrorMessage != null) {
@@ -944,10 +1116,10 @@ fun MainScreen(
                                     InAppUpdateManager.openInstallPermissionSettings(context)
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = StudioGreen),
+                            colors = ButtonDefaults.buttonColors(containerColor = StudioMint),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("📲 Install Now", color = Color(0xFF042F1E), fontWeight = FontWeight.Bold)
+                            Text("📲 Install Now", color = Color(0xFF091E16), fontWeight = FontWeight.Bold)
                         }
                     } else if (isDownloadingUpdate) {
                         Button(
@@ -971,22 +1143,22 @@ fun MainScreen(
 
                                 updateDownloadJob = coroutineScope.launch {
                                     InAppUpdateManager.downloadApk(context, info.apkUrl, info.latestVersion)
-                                        .collect { state ->
-                                            when (state) {
+                                        .collect { downloadState ->
+                                            when (downloadState) {
                                                 is DownloadState.Progress -> {
-                                                    updateProgressPercent = state.percent
-                                                    val readMb = String.format(java.util.Locale.US, "%.1f", state.bytesRead / 1048576.0)
-                                                    val totalMb = if (state.totalBytes > 0) {
-                                                        String.format(java.util.Locale.US, "%.1f MB", state.totalBytes / 1048576.0)
+                                                    updateProgressPercent = downloadState.percent
+                                                    val readMb = String.format(java.util.Locale.US, "%.1f", downloadState.bytesRead / 1048576.0)
+                                                    val totalMb = if (downloadState.totalBytes > 0) {
+                                                        String.format(java.util.Locale.US, "%.1f MB", downloadState.totalBytes / 1048576.0)
                                                     } else "Unknown"
                                                     updateProgressText = "$readMb MB / $totalMb"
                                                 }
                                                 is DownloadState.Success -> {
                                                     isDownloadingUpdate = false
-                                                    downloadedApkFile = state.file
+                                                    downloadedApkFile = downloadState.file
                                                     // Automatically invoke system package installer
                                                     if (InAppUpdateManager.canInstallApks(context)) {
-                                                        InAppUpdateManager.installApk(context, state.file)
+                                                        InAppUpdateManager.installApk(context, downloadState.file)
                                                     } else {
                                                         Toast.makeText(context, "Please allow EZmic to install updates to complete", Toast.LENGTH_LONG).show()
                                                         InAppUpdateManager.openInstallPermissionSettings(context)
@@ -994,17 +1166,17 @@ fun MainScreen(
                                                 }
                                                 is DownloadState.Error -> {
                                                     isDownloadingUpdate = false
-                                                    updateErrorMessage = state.message
+                                                    updateErrorMessage = downloadState.message
                                                 }
                                                 else -> {}
                                             }
                                         }
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = StudioGreen),
+                            colors = ButtonDefaults.buttonColors(containerColor = StudioMint),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text(if (updateErrorMessage != null) "Retry" else "⚡ Update Now", color = Color(0xFF042F1E), fontWeight = FontWeight.Bold)
+                            Text(if (updateErrorMessage != null) "Retry" else "⚡ Update Now", color = Color(0xFF091E16), fontWeight = FontWeight.Bold)
                         }
                     }
                 },
@@ -1021,6 +1193,7 @@ fun MainScreen(
             )
         }
 
+        // Mode switch confirmation
         if (showSwitchDialog && pendingMode != null) {
             val target = pendingMode!!
             val currentName = when (selectedMode) {
@@ -1092,18 +1265,8 @@ fun LiquidGlassDockSlider(
             .fillMaxWidth()
             .height(46.dp)
             .clip(RoundedCornerShape(23.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0F141F), Color(0xFF080B12))
-                )
-            )
-            .border(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(Color(0x40FFFFFF), Color(0x10FFFFFF))
-                ),
-                RoundedCornerShape(23.dp)
-            )
+            .background(PanelSurface)
+            .border(1.dp, BorderHairline, RoundedCornerShape(23.dp))
             .padding(3.dp)
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -1112,37 +1275,21 @@ fun LiquidGlassDockSlider(
             val animatedX by animateDpAsState(
                 targetValue = tabWidth * selectedIndex,
                 animationSpec = spring(
-                    dampingRatio = 0.75f,
+                    dampingRatio = 0.8f,
                     stiffness = Spring.StiffnessMediumLow
                 ),
-                label = "LiquidWaterlineDrop"
+                label = "DockSliderPill"
             )
 
-            // Liquid Sliding Water Drop
+            // Active Tab Pill
             Box(
                 modifier = Modifier
                     .offset(x = animatedX)
                     .width(tabWidth)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0x38FFFFFF),
-                                Color(0x2810B981),
-                                Color(0x14082216)
-                            ),
-                            center = Offset(Float.POSITIVE_INFINITY, 0f),
-                            radius = 200f
-                        )
-                    )
-                    .border(
-                        1.dp,
-                        Brush.verticalGradient(
-                            listOf(Color(0x90FFFFFF), Color(0x2510B981))
-                        ),
-                        RoundedCornerShape(20.dp)
-                    )
+                    .background(Color(0xFF22262E))
+                    .border(1.dp, BorderSubtle, RoundedCornerShape(20.dp))
             )
 
             // 3 Interactive Tabs
@@ -1150,9 +1297,9 @@ fun LiquidGlassDockSlider(
                 modes.forEach { mode ->
                     val isSelected = mode == selectedMode
                     val activeColor = Color.White
-                    val inactiveColor = Color(0xFF8B949E)
+                    val inactiveColor = Color(0xFF8E959E)
                     val iconColor by animateColorAsState(
-                        targetValue = if (isSelected) StudioGreen else inactiveColor,
+                        targetValue = if (isSelected) StudioMint else inactiveColor,
                         label = "IconColor"
                     )
                     val textColor by animateColorAsState(
@@ -1165,7 +1312,7 @@ fun LiquidGlassDockSlider(
                             .weight(1f)
                             .fillMaxHeight()
                             .clickable(
-                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                interactionSource = remember { MutableInteractionSource() },
                                 indication = null
                             ) {
                                 onModeSelected(mode)
@@ -1217,7 +1364,7 @@ fun LiquidGlassDockSlider(
                                 Canvas(modifier = Modifier.size(14.dp)) {
                                     val w = size.width
                                     val h = size.height
-                                    val path = androidx.compose.ui.graphics.Path().apply {
+                                    val path = Path().apply {
                                         moveTo(w * 0.5f, h * 0.08f)
                                         lineTo(w * 0.5f, h * 0.92f)
                                         moveTo(w * 0.22f, h * 0.32f)

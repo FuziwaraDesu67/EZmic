@@ -10,7 +10,8 @@ import java.net.InetAddress
 
 class WifiTransmitter(
     var targetIp: String = "192.168.1.100",
-    var targetPort: Int = PacketConstants.DEFAULT_WIFI_AUDIO_PORT
+    var targetPort: Int = PacketConstants.DEFAULT_WIFI_AUDIO_PORT,
+    var sessionToken: Long = 0L
 ) : IAudioTransmitter {
 
     override val name: String = "Wi-Fi"
@@ -28,6 +29,33 @@ class WifiTransmitter(
         try {
             targetAddress = InetAddress.getByName(targetIp)
             socket = DatagramSocket()
+
+            // Security (EZMIC-VULN-WIFI-SPOOFED-LOCKOUT): If token not yet discovered, attempt direct unicast handshake
+            if (sessionToken == 0L) {
+                try {
+                    val queryBytes = """{"service":"mic-query"}""".toByteArray(Charsets.UTF_8)
+                    val queryPacket = DatagramPacket(queryBytes, queryBytes.size, targetAddress, PacketConstants.DEFAULT_WIFI_DISCOVERY_PORT)
+                    socket?.soTimeout = 600
+                    socket?.send(queryPacket)
+                    val respBuf = ByteArray(1024)
+                    val respPacket = DatagramPacket(respBuf, respBuf.size)
+                    socket?.receive(respPacket)
+                    val respStr = String(respPacket.data, 0, respPacket.length, Charsets.UTF_8)
+                    val json = org.json.JSONObject(respStr)
+                    if (json.optString("service") == "mic-to-pc") {
+                        val token = json.optLong("token", 0L)
+                        if (token != 0L) {
+                            sessionToken = token
+                            onLogMessage?.invoke("Negotiated session token ($token) with $targetIp")
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Fall back if PC does not answer query or discovery port unreachable
+                } finally {
+                    socket?.soTimeout = 0
+                }
+            }
+
             isConnected = true
             onConnectionStateChanged?.invoke(true, "Streaming to $targetIp:$targetPort")
             onLogMessage?.invoke("Wi-Fi UDP transmitter connected to $targetIp:$targetPort")
@@ -44,7 +72,12 @@ class WifiTransmitter(
         val sock = socket ?: return
         val addr = targetAddress ?: return
         try {
-            val bytes = packet.toByteArray()
+            val outPacket = if (sessionToken != 0L && packet.sessionToken != sessionToken) {
+                packet.copy(sessionToken = sessionToken)
+            } else {
+                packet
+            }
+            val bytes = outPacket.toByteArray()
             val datagram = DatagramPacket(bytes, bytes.size, addr, targetPort)
             sock.send(datagram)
         } catch (e: Exception) {

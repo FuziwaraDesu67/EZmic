@@ -85,6 +85,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        TxtAppVersion.Text = $"EZmic {UpdateManager.CurrentVersion}";
         InitializeMeterSegments();
         PopulateOutputDevices();
         ChkStartup.IsChecked = StartupHelper.IsRunAtStartup();
@@ -242,7 +243,7 @@ public partial class MainWindow : Window
         for (int i = 0; i < _deviceList.Count; i++)
         {
             var dev = _deviceList[i];
-            CmbOutputDevices.Items.Add(dev.Name);
+            CmbOutputDevices.Items.Add(dev.DisplayName);
 
             if (dev.IsPreferred)
             {
@@ -250,8 +251,28 @@ public partial class MainWindow : Window
             }
         }
 
-        bool hasCable = _deviceList.Any(d => d.IsPreferred || d.Name.Contains("CABLE", StringComparison.OrdinalIgnoreCase));
-        BorderDriverNotice.Visibility = hasCable ? Visibility.Collapsed : Visibility.Visible;
+        bool hasCable = _deviceList.Any(d => d.IsPreferred || 
+            d.Name.Contains("EZmic", StringComparison.OrdinalIgnoreCase) || 
+            d.Name.Contains("CABLE", StringComparison.OrdinalIgnoreCase));
+
+        bool isRenamed = DriverInstaller.IsEndpointRenamed();
+
+        if (!hasCable)
+        {
+            TxtDriverNotice.Text = "Virtual microphone needed for games";
+            BtnInstallDriver.Content = "Install Virtual Mic";
+            BorderDriverNotice.Visibility = Visibility.Visible;
+        }
+        else if (!isRenamed)
+        {
+            TxtDriverNotice.Text = "Show as 'EZmic' in Discord & Games";
+            BtnInstallDriver.Content = "1-Click Configure";
+            BorderDriverNotice.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            BorderDriverNotice.Visibility = Visibility.Collapsed;
+        }
 
         if (CmbOutputDevices.Items.Count > 0)
         {
@@ -263,9 +284,58 @@ public partial class MainWindow : Window
         }
     }
 
-    private void BtnInstallDriver_Click(object sender, RoutedEventArgs e)
+    private async void BtnInstallDriver_Click(object sender, RoutedEventArgs e)
     {
-        DriverInstaller.OpenOfficialDownloadPage(AppendLog);
+        BtnInstallDriver.IsEnabled = false;
+
+        bool isRenamed = DriverInstaller.IsEndpointRenamed();
+        bool hasCable = _deviceList.Any(d => d.IsPreferred || 
+            d.Name.Contains("EZmic", StringComparison.OrdinalIgnoreCase) || 
+            d.Name.Contains("CABLE", StringComparison.OrdinalIgnoreCase));
+
+        if (hasCable && !isRenamed)
+        {
+            BtnInstallDriver.Content = "Configuring...";
+            AppendLog("Configuring audio device to display 'EZmic Virtual Microphone' in Discord & Windows...");
+            bool success = await DriverInstaller.RenameEndpointAsync(AppendLog);
+            if (success)
+            {
+                AppendLog("Refreshing audio output devices...");
+                PopulateOutputDevices();
+                System.Windows.MessageBox.Show(
+                    "EZmic Virtual Microphone is now configured!\n\nIn Discord, OBS, Zoom, or your games:\n👉 Set Input Device (Microphone) to: 'EZmic Virtual Microphone'.",
+                    "EZmic Setup Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                BtnInstallDriver.IsEnabled = true;
+                BtnInstallDriver.Content = "1-Click Configure";
+            }
+        }
+        else
+        {
+            BtnInstallDriver.Content = "Installing...";
+            AppendLog("Starting silent 1-click installation of EZmic Virtual Microphone...");
+
+            bool success = await DriverInstaller.InstallVirtualMicAsync(AppendLog);
+            if (success)
+            {
+                AppendLog("Refreshing audio output devices...");
+                PopulateOutputDevices();
+                System.Windows.MessageBox.Show(
+                    "EZmic Virtual Microphone has been successfully installed and configured!\n\nIn Discord, OBS, Zoom, or your games:\n👉 Set Input Device (Microphone) to: 'EZmic Virtual Microphone'.",
+                    "EZmic Setup Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            else
+            {
+                BtnInstallDriver.IsEnabled = true;
+                BtnInstallDriver.Content = "Install Virtual Mic";
+            }
+        }
     }
 
     private async void BtnInstallApkToPhone_Click(object sender, RoutedEventArgs e)
@@ -869,9 +939,20 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             string line = $"[{DateTime.Now:HH:mm:ss}] {message}\n";
-            TxtLog.AppendText(line);
-            ScrollLog.ScrollToEnd();
+            TxtLog?.AppendText(line);
         });
+    }
+
+    private void BtnSettings_Click(object sender, RoutedEventArgs e)
+    {
+        GridMainView.Visibility = Visibility.Collapsed;
+        GridSettingsView.Visibility = Visibility.Visible;
+    }
+
+    private void BtnBackFromSettings_Click(object sender, RoutedEventArgs e)
+    {
+        GridSettingsView.Visibility = Visibility.Collapsed;
+        GridMainView.Visibility = Visibility.Visible;
     }
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)

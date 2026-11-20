@@ -48,6 +48,7 @@ class DiscoveryBeacon(private val context: Context) {
                     if (json.optString("service") == "mic-to-pc") {
                         val deviceName = json.optString("device", "Windows PC")
                         val port = json.optInt("port", PacketConstants.DEFAULT_WIFI_AUDIO_PORT)
+                        val token = json.optLong("token", 0L)
                         // Security (S-01): Always bind to the physical UDP packet origin address to prevent redirection
                         val physicalIp = packet.address?.hostAddress
                         val senderIp = if (!physicalIp.isNullOrEmpty() && physicalIp != "0.0.0.0") {
@@ -59,7 +60,8 @@ class DiscoveryBeacon(private val context: Context) {
                         return@withContext DiscoveredPc(
                             ip = senderIp,
                             port = port,
-                            name = deviceName
+                            name = deviceName,
+                            token = token
                         )
                     }
                 } catch (_: java.net.SocketTimeoutException) {
@@ -92,5 +94,6 @@ class DiscoveryBeacon(private val context: Context) {
 data class DiscoveredPc(
     val ip: String,
     val port: Int,
-    val name: String
+    val name: String,
+    val token: Long = 0L
 )

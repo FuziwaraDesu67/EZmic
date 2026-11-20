@@ -10,7 +10,23 @@ public class AudioDeviceItem
     public string Name { get; set; } = "";
     public bool IsPreferred { get; set; }
 
-    public override string ToString() => Name;
+    public string DisplayName
+    {
+        get
+        {
+            if (Name.Contains("EZmic", StringComparison.OrdinalIgnoreCase))
+            {
+                return Name;
+            }
+            if (Name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase))
+            {
+                return "EZmic Audio Cable (Virtual Mic)";
+            }
+            return Name;
+        }
+    }
+
+    public override string ToString() => DisplayName;
 }
 
 public class AudioOutputManager : IDisposable
@@ -70,8 +86,9 @@ public class AudioOutputManager : IDisposable
                 string name = ep.FriendlyName;
                 bool isPreferred = false;
 
-                // Strongly prefer standard "CABLE Input" over other devices
-                if (name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase) &&
+                // Strongly prefer "EZmic Audio Cable" or "CABLE Input" over other devices
+                if ((name.Contains("EZmic", StringComparison.OrdinalIgnoreCase) ||
+                     name.Contains("CABLE Input", StringComparison.OrdinalIgnoreCase)) &&
                     !name.Contains("16ch", StringComparison.OrdinalIgnoreCase))
                 {
                     isPreferred = true;

@@ -24,7 +24,7 @@ public static class UpdateManager
         get
         {
             var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.6";
+            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.1.8";
         }
     }
 
@@ -41,6 +41,18 @@ public static class UpdateManager
     {
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "EZmic-Desktop-Updater");
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+    }
+
+    public static bool IsInstalledVersion()
+    {
+        string? currentExe = Environment.ProcessPath;
+        if (string.IsNullOrEmpty(currentExe)) return false;
+        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        string progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+        return currentExe.StartsWith(Path.Combine(localAppData, "Programs"), StringComparison.OrdinalIgnoreCase)
+            || currentExe.StartsWith(progFiles, StringComparison.OrdinalIgnoreCase)
+            || currentExe.StartsWith(progFilesX86, StringComparison.OrdinalIgnoreCase);
     }
 
     public static async Task<UpdateInfo> CheckForUpdatesAsync()
@@ -68,17 +80,53 @@ public static class UpdateManager
             info.ReleaseNotes = root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
             info.ReleaseUrl = root.TryGetProperty("html_url", out var h) ? h.GetString() ?? $"https://github.com/{RepoOwner}/{RepoName}/releases" : "";
 
-            // Find Windows .exe asset specifically
+            // Security (EZMIC-VULN-UPDATER-ASSET-COLLISION): Disambiguate Setup installer vs standalone binary
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
-                foreach (var asset in assets.EnumerateArray())
+                bool isInstalled = IsInstalledVersion();
+
+                // 1. If currently installed via Inno Setup, prioritize the "-Setup.exe" installer asset
+                if (isInstalled)
                 {
-                    string name = asset.GetProperty("name").GetString() ?? "";
-                    if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    foreach (var asset in assets.EnumerateArray())
                     {
-                        info.DownloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
-                        info.AssetName = name;
-                        break;
+                        string name = asset.GetProperty("name").GetString() ?? "";
+                        if (name.Contains("Setup", StringComparison.OrdinalIgnoreCase) && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                        {
+                            info.DownloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
+                            info.AssetName = name;
+                            break;
+                        }
+                    }
+                }
+
+                // 2. If standalone portable mode, prioritize "EZmic.exe" (or non-Setup .exe)
+                if (string.IsNullOrEmpty(info.DownloadUrl))
+                {
+                    foreach (var asset in assets.EnumerateArray())
+                    {
+                        string name = asset.GetProperty("name").GetString() ?? "";
+                        if (name.Equals("EZmic.exe", StringComparison.OrdinalIgnoreCase))
+                        {
+                            info.DownloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
+                            info.AssetName = name;
+                            break;
+                        }
+                    }
+                }
+
+                // 3. Fallback to any .exe asset if exact match wasn't found
+                if (string.IsNullOrEmpty(info.DownloadUrl))
+                {
+                    foreach (var asset in assets.EnumerateArray())
+                    {
+                        string name = asset.GetProperty("name").GetString() ?? "";
+                        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                        {
+                            info.DownloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
+                            info.AssetName = name;
+                            break;
+                        }
                     }
                 }
             }
@@ -129,10 +177,25 @@ public static class UpdateManager
             throw new InvalidOperationException("Invalid or non-executable update URL.");
         }
 
+        // Security (EZMIC-VULN-UPDATER-UNSIGNED-EXEC): Validate download origin is strictly GitHub Releases or GitHub CDN
+        if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var uri) ||
+            !uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+            !(uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) ||
+              uri.Host.EndsWith(".githubusercontent.com", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException("Untrusted download source host.");
+        }
+
         // Security (S-12): Use an isolated, randomized private directory rather than a static predictable path
         string updateDir = Path.Combine(Path.GetTempPath(), $"EZmic_Update_{Guid.NewGuid():N}");
         Directory.CreateDirectory(updateDir);
-        string tempPath = Path.Combine(updateDir, "EZmic-update.exe");
+
+        string fileName = Path.GetFileName(uri.LocalPath);
+        if (string.IsNullOrWhiteSpace(fileName) || !fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            fileName = "EZmic-update.exe";
+        }
+        string tempPath = Path.Combine(updateDir, fileName);
 
         using var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, token);
         response.EnsureSuccessStatusCode();
@@ -158,9 +221,9 @@ public static class UpdateManager
             }
         }
 
-        // Security (S-04 / S-10): Verify downloaded file has valid Windows PE magic header ('MZ')
+        // Security: Verify downloaded file has valid Windows PE magic header ('MZ') and valid PE signature
         var fileInfo = new FileInfo(tempPath);
-        if (fileInfo.Length < 1024)
+        if (fileInfo.Length < 1024 * 1024)
         {
             File.Delete(tempPath);
             throw new InvalidDataException("Downloaded update file is too small to be a valid Windows binary.");
@@ -176,6 +239,25 @@ public static class UpdateManager
                 File.Delete(tempPath);
                 throw new InvalidDataException("Security verification failed: Downloaded file is not a valid Windows executable.");
             }
+
+            // Verify PE header offset at 0x3C
+            verifyStream.Seek(0x3C, SeekOrigin.Begin);
+            byte[] peOffsetBytes = new byte[4];
+            verifyStream.Read(peOffsetBytes, 0, 4);
+            int peOffset = BitConverter.ToInt32(peOffsetBytes, 0);
+            if (peOffset > 0 && peOffset < fileInfo.Length - 4)
+            {
+                verifyStream.Seek(peOffset, SeekOrigin.Begin);
+                byte[] peSignature = new byte[4];
+                verifyStream.Read(peSignature, 0, 4);
+                // 'P' 'E' 0x00 0x00
+                if (peSignature[0] != 0x50 || peSignature[1] != 0x45 || peSignature[2] != 0 || peSignature[3] != 0)
+                {
+                    verifyStream.Dispose();
+                    File.Delete(tempPath);
+                    throw new InvalidDataException("Security verification failed: Corrupted PE structure.");
+                }
+            }
         }
 
         return tempPath;
@@ -186,6 +268,23 @@ public static class UpdateManager
         try
         {
             string currentExe = Environment.ProcessPath ?? "";
+            bool isSetupInstaller = Path.GetFileName(updateExePath).Contains("Setup", StringComparison.OrdinalIgnoreCase);
+
+            // Security (EZMIC-VULN-UPDATER-ASSET-COLLISION):
+            // If the downloaded update is the Inno Setup installer wizard, launch the installer directly
+            // with /CLOSEAPPLICATIONS rather than running the batch replacement script!
+            if (isSetupInstaller)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = updateExePath,
+                    Arguments = "/CLOSEAPPLICATIONS",
+                    UseShellExecute = true
+                });
+                Environment.Exit(0);
+                return;
+            }
+
             int currentPid = Process.GetCurrentProcess().Id;
             if (!string.IsNullOrEmpty(currentExe) && File.Exists(currentExe))
             {

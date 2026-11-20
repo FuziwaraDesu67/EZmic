@@ -160,15 +160,12 @@ public static class AdbHelper
         string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string cacheApk = Path.Combine(localAppData, "MicToPC", "EZmic.apk");
 
-        // 1. Check local release / build paths first
+        // 1. Check application directory or AppData cache (Security: EZMIC-VULN-ADB-HARDCODED-PATH removed)
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string[] localCandidates =
         {
             Path.Combine(baseDir, "EZmic.apk"),
-            cacheApk,
-            @"D:\games\mic\release\EZmic-v1.1.6.apk",
-            @"D:\games\mic\android\app\build\outputs\apk\debug\app-debug.apk",
-            @"D:\games\mic\release\EZmic-v1.1.5.apk"
+            cacheApk
         };
 
         foreach (var candidate in localCandidates)
